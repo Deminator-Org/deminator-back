@@ -15,4 +15,6 @@ Windows: `mvnw.cmd install`
 
 # Run the project
 
-TODO
+Unix: `./mvnw spring-boot:run`
+
+Windows: `mvnw.cmd spring-boot:run`

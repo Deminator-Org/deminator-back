@@ -1,14 +1,6 @@
 package com.natami.deminator.back.model;
 
-import java.security.cert.X509CRL;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import com.natami.deminator.back.entities.EntityCell;
 import com.natami.deminator.back.entities.EntityRoom;
-import com.natami.deminator.back.util.Coord;
 import com.natami.deminator.back.util.InvalidSettingsException;
 
 public class Room implements EntityRoom {
@@ -20,7 +12,7 @@ public class Room implements EntityRoom {
 	private int height = DEFAULT_SQUARE_SIZE; // 0 ... y ... height -1
 	private int minesCount = DEFAULT_MINES_COUNT;
 	private String randomSeed = null;
-	private Map<Coord, Cell> cells = new HashMap<>();
+	private Grid grid = null;
 
 	public Room() {
 	}
@@ -28,58 +20,50 @@ public class Room implements EntityRoom {
 	public void setSeed(String seed) {
 		this.randomSeed = seed;
 	}
-
-	private void checkSettings() throws InvalidSettingsException {
-		if(width < 1) {
-			throw new InvalidSettingsException("width:" + width);
-		}
-		if(height < 1) {
-			throw new InvalidSettingsException("height:" + height);
-		}
-		if(minesCount >= width*height) {
-			throw new InvalidSettingsException("minesCount:" + minesCount + ", width:" + width + ", height:" + height);
-		}
+	public void setWidth(int width) {
+		this.width = width;
 	}
-	public void generateGrid() throws InvalidSettingsException {
-		checkSettings();
-
-		// generate cells
-		for(int y=height-1; y>=0; y--) {
-			for(int x=0; x<width; x++) {
-				cells.put(new Coord(x,y), new Cell());
-			}
-		}
-
-		// add mines
-		Set<Coord> mines = new HashSet<>();
-		while(mines.size() < minesCount) {
-			Coord randomCoord = new Coord((int)(Math.random()*this.width), (int)(Math.random()*this.height));
-			mines.add(randomCoord);
-		}
-		for(Coord coord : mines) {
-			cells.get(coord).setAsMine(true);
-		}
+	public void setHeigth(int height) {
+		this.height = height;
 	}
-	public Cell getCell(int x, int y) {
-		return cells.get(new Coord(x, y));
-	}
-
-
-	public void openAllCells() {
-		cells.forEach((x, c) -> c.setAsOpen(true));
+	public void setMinesCount(int minesCount) {
+		this.minesCount = minesCount;
 	}
 
 	@Override
-	public Map<Coord, ? extends EntityCell> getGrid() {
-		return cells;
+	public int getWidth() {
+		return this.width;
 	}
 
+	@Override
+	public int getHeight() {
+		return this.height;
+	}
+
+	@Override
+	public int getMinesCount() {
+		return this.minesCount;
+	}
+
+	@Override
+	public Grid getGrid() {
+		return this.grid;
+	}
+
+	public void start() throws InvalidSettingsException {
+		if(this.grid != null) {
+			return;
+		}
+		this.grid = new Grid(this.width, this.height, this.minesCount, this.randomSeed);
+	}
+
+	public void stop() {
+		this.grid = null;
+	}
 
 	// // // STATIC // // //
 
 	public static boolean isValidRoomNumber(String roomNumber) {
 		return roomNumber != null && roomNumber.matches(VALID_ROOM_NUMBER_REGEXP);
 	}
-
-
 }

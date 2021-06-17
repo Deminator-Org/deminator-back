@@ -20,6 +20,6 @@ public class Cell implements EntityCell {
 
 	@Override
 	public Boolean isMine() {
-		return isOpen() ? isMine : null;
+		return isMine; // isOpen() ? isMine : null;
 	}
 }

@@ -1,9 +1,12 @@
 package com.natami.deminator.back.entities;
 
-import java.util.Map;
-
-import com.natami.deminator.back.util.Coord;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public interface EntityRoom {
-	public Map<Coord, ? extends EntityCell> getGrid();
+	public int getWidth();
+	public int getHeight();
+
+	@JsonProperty("mines")
+	public int getMinesCount();
+	public EntityGrid getGrid();
 }

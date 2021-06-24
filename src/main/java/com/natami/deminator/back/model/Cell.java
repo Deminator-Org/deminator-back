@@ -1,6 +1,6 @@
 package com.natami.deminator.back.model;
 
-import com.natami.deminator.back.entities.EntityCell;
+import com.natami.deminator.back.responses.EntityCell;
 
 public class Cell implements EntityCell {
 	private boolean isMine = false;
@@ -20,6 +20,6 @@ public class Cell implements EntityCell {
 
 	@Override
 	public Boolean isMine() {
-		return isMine; // isOpen() ? isMine : null;
+		return isMine;
 	}
 }

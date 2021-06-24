@@ -6,8 +6,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import com.natami.deminator.back.entities.EntityCell;
-import com.natami.deminator.back.entities.EntityGrid;
+import com.natami.deminator.back.responses.EntityCell;
+import com.natami.deminator.back.responses.EntityGrid;
 import com.natami.deminator.back.util.Coord;
 import com.natami.deminator.back.util.InvalidSettingsException;
 

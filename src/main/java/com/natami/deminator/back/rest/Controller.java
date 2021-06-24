@@ -2,19 +2,18 @@ package com.natami.deminator.back.rest;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.natami.deminator.back.entities.EntityRoom;
 import com.natami.deminator.back.model.Room;
 import com.natami.deminator.back.model.RoomManager;
-import com.natami.deminator.back.util.InvalidSettingsException;
+import com.natami.deminator.back.responses.*;
+import com.natami.deminator.back.postparams.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -23,99 +22,78 @@ import org.springframework.web.server.ResponseStatusException;
 public class Controller {
 	private RoomManager manager = new RoomManager();
 
+	@Autowired
+	private HttpServletRequest request;
+
 	@GetMapping("/")
 	public String index() {
-		return "controller test";
+		return "You are on session ID: " + getUniqueSessionId();
 	}
 
 	@GetMapping(path = "/{roomNumber}", produces="application/json")
-	public EntityRoom getRoom(@PathVariable String roomNumber) {
-		Room r = manager.getOrCreateRoom(roomNumber);
-		if(r == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can't create a room with name " + roomNumber);
+	public EntityRoom getRoomStatus(@PathVariable String roomNumber) {
+		return getRoom(roomNumber, true);
+	}
+
+	@PostMapping(path = "/settings", consumes="application/json", produces="application/json")
+	public EntityRoom setPlayerReady(@RequestBody SettingsPostParams parameters) {
+		Room r = getRoom(parameters.getRoomID(), false);
+
+		// TODO: Gestion d'erreurs
+		if(parameters.getWidth() != null) {
+			r.setWidth(parameters.getWidth());
+		}
+		if(parameters.getHeight() != null) {
+			r.setHeigth(parameters.getHeight());
+		}
+		if(parameters.getMinesCount() != null) {
+			r.setMinesCount(parameters.getMinesCount());
 		}
 		return r;
 	}
 
-	@GetMapping(path = "/{roomNumber}/show/{x}/{y}", produces="application/json")
-	public EntityRoom showCell(@PathVariable String roomNumber, @PathVariable int x, @PathVariable int y) {
-		Room r = manager.getRoom(roomNumber);
-		if(r == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No room found with name " + roomNumber);
-		}
-		r.getGrid().getCell(x, y).setAsOpen(true);
-
-		return getRoom(roomNumber);
+	@PostMapping(path = "/ready", consumes="application/json", produces="application/json")
+	public EntityRoom updateSettings(@RequestBody ReadyPostParams parameters) {
+		Room r = getRoom(parameters.getRoomID(), false);
+		// TODO
+		return r;
 	}
 
-	@GetMapping(path = "/{roomNumber}/show/all", produces="application/json")
-	public EntityRoom showAllCells(@PathVariable String roomNumber) {
-		Room r = manager.getRoom(roomNumber);
-		if(r == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No room found with name " + roomNumber);
-		}
-		r.getGrid().openAllCells();
-
-		return getRoom(roomNumber);
+	@PostMapping(path = "/client", consumes="application/json", produces="application/json")
+	public EntityRoom updateUserInfo(@RequestBody ClientPostParams parameters) {
+		Room r = getRoom(parameters.getRoomID(), false);
+		// TODO
+		return r;
 	}
 
-	@RequestMapping(path = "/{roomNumber}/start", produces="application/json")
-	public EntityRoom startGame(
-			@PathVariable String roomNumber,
-			@RequestParam(name = "width", required = false) Integer width,
-			@RequestParam(name = "height", required = false) Integer height,
-			@RequestParam(name = "mines", required = false) Integer mines) {
-		Room r = manager.getOrCreateRoom(roomNumber);
-		if(r == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can't create a room with name " + roomNumber);
-		}
-		if(width != null) {
-			r.setWidth(width);
-		}
-		if(height != null) {
-			r.setHeigth(height);
-		}
-		if(mines != null) {
-			r.setMinesCount(mines);
-		}
-		try {
-			r.start();
-		} catch (InvalidSettingsException e) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
-		}
 
-		return getRoom(roomNumber);
+	@GetMapping(path = "/{roomNumber}/game", produces="application/json")
+	public EntityGame getGameStatus(@PathVariable String roomNumber) {
+		// TODO
+		throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	@GetMapping(path = "/{roomNumber}/set/width/{width}", produces="application/json")
-	public EntityRoom setRoomWidth(@PathVariable String roomNumber, @PathVariable int width) {
-		Room r = manager.getRoom(roomNumber);
-		if(r == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No room found with name " + roomNumber);
-		}
-		r.setWidth(width);
-
-		return getRoom(roomNumber);
+	@PostMapping(path = "/action", consumes="application/json", produces="application/json")
+	public EntityGridUpdate doAction(@RequestBody ActionPostParams parameters) {
+		// TODO
+		throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	@GetMapping(path = "/{roomNumber}/set/height/{height}", produces="application/json")
-	public EntityRoom setRoomHeight(@PathVariable String roomNumber, @PathVariable int height) {
-		Room r = manager.getRoom(roomNumber);
-		if(r == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No room found with name " + roomNumber);
+	private long getUniqueSessionId() {
+		long id = request.getRemotePort();
+		String[] list = request.getRemoteHost().split("[.:]+");
+		for(String i : list) {
+			id *= 129;
+			id += Integer.parseInt(i);
 		}
-		r.setHeigth(height);
-
-		return getRoom(roomNumber);
+		return id;
 	}
-	@GetMapping(path = "/{roomNumber}/set/mines/{mines}", produces="application/json")
-	public EntityRoom setRoomMinesNames(@PathVariable String roomNumber, @PathVariable int mines) {
-		Room r = manager.getRoom(roomNumber);
-		if(r == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No room found with name " + roomNumber);
-		}
-		r.setMinesCount(mines);
 
-		return getRoom(roomNumber);
+	private Room getRoom(String roomNumber, boolean authorizeCreation) {
+		Room r = authorizeCreation ? manager.getOrCreateRoom(roomNumber) : manager.getRoom(roomNumber);
+		if(r == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, (authorizeCreation ? "Cannot create a room " : "Could not find room ") + roomNumber);
+		}
+		return r;
 	}
 }

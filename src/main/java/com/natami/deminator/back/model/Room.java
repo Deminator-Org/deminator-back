@@ -1,6 +1,9 @@
 package com.natami.deminator.back.model;
 
-import com.natami.deminator.back.entities.EntityRoom;
+import java.util.List;
+
+import com.natami.deminator.back.responses.EntityPlayer;
+import com.natami.deminator.back.responses.EntityRoom;
 import com.natami.deminator.back.util.InvalidSettingsException;
 
 public class Room implements EntityRoom {
@@ -45,7 +48,6 @@ public class Room implements EntityRoom {
 		return this.minesCount;
 	}
 
-	@Override
 	public Grid getGrid() {
 		return this.grid;
 	}
@@ -65,5 +67,29 @@ public class Room implements EntityRoom {
 
 	public static boolean isValidRoomNumber(String roomNumber) {
 		return roomNumber != null && roomNumber.matches(VALID_ROOM_NUMBER_REGEXP);
+	}
+
+	@Override
+	public String getClientID() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getTurnDuration() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public String getGameStartTime() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<EntityPlayer> getPlayerList() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

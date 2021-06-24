@@ -1,4 +1,4 @@
-package com.natami.deminator.back.entities;
+package com.natami.deminator.back.responses;
 
 import java.util.Map;
 

@@ -5,9 +5,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public interface EntityRoom {
-	@JsonProperty("client")
-	public String getClientID();
-
 	@JsonProperty("$.grid.width")
 	public int getWidth();
 	@JsonProperty("$.grid.height")
@@ -22,5 +19,5 @@ public interface EntityRoom {
 	public String getGameStartTime();
 
 	@JsonProperty("who")
-	public List<EntityPlayer> getPlayerList();
+	public List<? extends EntityPlayer> getPlayerList();
 }

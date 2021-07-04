@@ -5,17 +5,17 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public interface EntityRoom {
-	@JsonProperty("$.grid.width")
+	@JsonProperty("width")
 	public int getWidth();
-	@JsonProperty("$.grid.height")
+	@JsonProperty("height")
 	public int getHeight();
-	@JsonProperty("$.grid.mines")
+	@JsonProperty("mines")
 	public int getMinesCount();
 
-	@JsonProperty("$.game.turnDuration")
+	@JsonProperty("turnDuration")
 	public int getTurnDuration();
 
-	@JsonProperty("$.game.startTime")
+	@JsonProperty("startTime")
 	public String getGameStartTime();
 
 	@JsonProperty("who")

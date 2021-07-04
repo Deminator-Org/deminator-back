@@ -9,13 +9,13 @@ public interface SettingsPostParams {
 	@JsonProperty(value="room", required=true)
 	public String getRoomID();
 
-	@JsonProperty(value="$.grid.width", required=false)
+	@JsonProperty(value="width", required=false)
 	public Integer getWidth();
-	@JsonProperty(value="$.grid.height", required=false)
+	@JsonProperty(value="height", required=false)
 	public Integer getHeight();
-	@JsonProperty(value="$.grid.mines", required=false)
+	@JsonProperty(value="mines", required=false)
 	public Integer getMinesCount();
 
-	@JsonProperty(value="$.game.turnDuration", required=false)
+	@JsonProperty(value="turnDuration", required=false)
 	public Integer getTurnDuration();
 }

@@ -33,7 +33,7 @@ public class Controller {
 
 	@GetMapping(path = "/", produces="application/json")
 	public String index() {
-		return "{client:\"" + getUniqueSessionId() + "\"}";
+		return "{\"client\":\"" + getUniqueSessionId() + "\"}";
 	}
 
 	@GetMapping(path = "/{roomNumber}", produces="application/json")
@@ -87,14 +87,15 @@ public class Controller {
 
 	@GetMapping(path = "/{roomNumber}/game", produces="application/json")
 	public EntityGame getGameStatus(@PathVariable String roomNumber) {
-		// TODO
-		throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED);
+		Room r = getRoom(roomNumber, false);
+		return r.getGame();
 	}
 
 	@PostMapping(path = "/action", consumes="application/json", produces="application/json")
-	public void doAction(@RequestBody ActionPostParams parameters) {
-		// TODO
-		return;
+	public EntityGame doAction(@RequestBody ActionPostParams parameters) {
+		Room r = getRoom(parameters.getRoomID(), false);
+		rooms.action(r, parameters.getClientID(), parameters.getActionsList());
+		return r.getGame();
 	}
 
 	private long getUniqueSessionId() {

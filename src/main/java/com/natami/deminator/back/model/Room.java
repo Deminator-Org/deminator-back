@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.natami.deminator.back.responses.EntityPlayer;
 import com.natami.deminator.back.responses.EntityRoom;
 import com.natami.deminator.back.util.InvalidSettingsException;
 
@@ -22,16 +21,18 @@ public class Room implements EntityRoom {
 	private int height = DEFAULT_SQUARE_SIZE; // 0 ... y ... height -1
 	private int minesCount = DEFAULT_MINES_COUNT;
 	private String randomSeed = null;
-	private Game grid = null;
+	private Game game = null;
 	private int turnDuration = DEFAULT_TURN_DURATION;
 	private String gameStartTime = null;
 	private final Map<Long, Player> players = new HashMap<>();
 
-	public Room() {
+	public Room(String seed) {
+		this.randomSeed = seed;
+		start();
 	}
 
-	public void setSeed(String seed) {
-		this.randomSeed = seed;
+	public String getSeed() {
+		return this.randomSeed;
 	}
 	public void setWidth(int width) {
 		this.width = width;
@@ -57,24 +58,24 @@ public class Room implements EntityRoom {
 	}
 
 	public boolean start() {
-		if(this.grid != null) {
+		if(this.game != null) {
 			return true;
 		}
 		try {
-			this.grid = new Game(this.width, this.height, this.minesCount, this.randomSeed);
-
 			// Set start date time
 			Calendar startTime = Calendar.getInstance();
 			startTime.add(Calendar.SECOND, START_TIME_DELAY_AFTER_LAUNCH);
 			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 			this.gameStartTime = formatter.format(startTime.getTime()); // e.g. 2000-12-31T23:59:59
+
+			this.game = new Game(this);
 			return true;
 		} catch (InvalidSettingsException e) {}
 		return false;
 	}
 
 	public void stop() {
-		this.grid = null;
+		this.game = null;
 	}
 
 	public Player getPlayer(long clientID) {
@@ -83,6 +84,16 @@ public class Room implements EntityRoom {
 
 	public void setPlayerReady(long uniqueSessionId, boolean ready) {
 		getPlayer(uniqueSessionId).setReady(ready);
+	}
+
+	public Game getGame() {
+		this.game.update();
+		return this.game;
+	}
+
+	public boolean areAllPlayersReady() {
+		// TODO
+		return true;
 	}
 
 	// // // Interfaces // // //
@@ -113,18 +124,15 @@ public class Room implements EntityRoom {
 	}
 
 	@Override
-	public List<? extends EntityPlayer> getPlayerList() {
-		return new ArrayList<EntityPlayer>(this.players.values());
+	public List<Player> getPlayerList() {
+		return new ArrayList<>(this.players.values());
 	}
+
 
 	// // // STATIC // // //
 
 	public static boolean isValidRoomNumber(String roomNumber) {
 		return roomNumber != null && roomNumber.matches(VALID_ROOM_NUMBER_REGEXP);
-	}
-
-	public boolean areAllPlayersReady() {
-		return false;
 	}
 
 }

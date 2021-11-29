@@ -1,119 +1,79 @@
 package com.natami.deminator.back.rest;
 
-import javax.servlet.http.HttpServletRequest;
+import com.natami.deminator.back.exceptions.InvalidSettingsException;
+import com.natami.deminator.back.interfaces.GameData;
+import com.natami.deminator.back.interfaces.GameSetup;
+import com.natami.deminator.back.interfaces.PlayerAction;
+import com.natami.deminator.back.interfaces.Rename;
+import com.natami.deminator.back.model.Coord;
+import com.natami.deminator.back.model.Game;
 
-import com.natami.deminator.back.model.Player;
-import com.natami.deminator.back.model.Room;
-import com.natami.deminator.back.model.RoomManager;
-import com.natami.deminator.back.postparams.ActionPostParams;
-import com.natami.deminator.back.postparams.ClientPostParams;
-import com.natami.deminator.back.postparams.ReadyPostParams;
-import com.natami.deminator.back.postparams.SettingsPostParams;
-import com.natami.deminator.back.postparams.StartPostParams;
-import com.natami.deminator.back.responses.EntityGame;
-import com.natami.deminator.back.responses.EntityRoom;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @CrossOrigin(origins = "*")
 public class Controller {
-	private RoomManager rooms = new RoomManager();
 
-	@Autowired
-	private HttpServletRequest request;
+	private Game game = null;
 
 	@GetMapping(path = "/", produces="application/json")
 	public String index() {
-		return "{\"client\":\"" + getUniqueSessionId() + "\"}";
+		return "{}";
 	}
 
-	@GetMapping(path = "/{roomNumber}", produces="application/json")
-	public EntityRoom getRoomStatus(@PathVariable String roomNumber) {
-		return getRoom(roomNumber, true);
-	}
+	@GetMapping(path = "/gameSetup", consumes = "application/json", produces="application/json")
+	public GameData gameSetup(@RequestBody GameSetup parameters) throws InvalidSettingsException {
+		if(game == null) {
+			// Check parameters, send InvalidSettingsException in case of error
+			if(parameters.getWidth() <= 0) {
+				throw new InvalidSettingsException("Width must be positive");
+			} else if(parameters.getHeight() <= 0) {
+				throw new InvalidSettingsException("Height must be positive");
+			} else if(parameters.getMinesCount() <= 0) {
+				throw new InvalidSettingsException("Mines count must be positive");
+			} else if(parameters.getMinesCount() >= parameters.getWidth() * parameters.getHeight()) {
+				throw new InvalidSettingsException("Mines count must be less than board size (" + parameters.getWidth() * parameters.getHeight() + ")");
+			}
 
-	@PostMapping(path = "/settings", consumes="application/json", produces="application/json")
-	public EntityRoom setRoomSettings(@RequestBody SettingsPostParams parameters) {
-		Room r = getRoom(parameters.getRoomID(), false);
-
-		// TODO: Gestion d'erreurs
-		if(parameters.getWidth() != null) {
-			r.setWidth(parameters.getWidth());
+			game = new Game(parameters.getWidth(), parameters.getHeight(), parameters.getMinesCount());
 		}
-		if(parameters.getHeight() != null) {
-			r.setHeigth(parameters.getHeight());
+
+		if(!game.getPlayers().stream().anyMatch(p -> p.getName().equals(parameters.getPlayerName()))) {
+			game.newPlayer(parameters.getPlayerName());
 		}
-		if(parameters.getMinesCount() != null) {
-			r.setMinesCount(parameters.getMinesCount());
+
+		return getGameData();
+	}
+
+	@GetMapping(path = "/gameSetup", produces="application/json")
+	public GameData getGameData() {
+		if(game == null) {
+			throw new IllegalStateException("Game not initialized");
 		}
-		if(parameters.getTurnDuration() != null) {
-			r.setTurnDuration(parameters.getTurnDuration());
+		return game;
+	}
+
+	@GetMapping(path = "/reveal", consumes = "application/json", produces="application/json")
+	public GameData getMines(@RequestBody PlayerAction action) {
+		if(!game.hasGeneratedMines()) {
+			game.generateMines(action.getCoord());
 		}
-		return r;
-	}
 
-	@PostMapping(path = "/ready", consumes="application/json", produces="application/json")
-	public EntityRoom setPlayerReady(@RequestBody ReadyPostParams parameters) {
-		Room r = getRoom(parameters.getRoomID(), false);
-		r.setPlayerReady(getUniqueSessionId(), parameters.isReady());
-		return r;
-	}
-
-	@PostMapping(path = "/client", consumes="application/json")
-	public EntityRoom updateUserInfo(@RequestBody ClientPostParams parameters) {
-		Room r = getRoom(parameters.getRoomID(), false);
-		Player p = r.getPlayer(getUniqueSessionId());
-		p.setName(parameters.getNewName());
-		return r;
-	}
-
-	@PostMapping(path = "/start", consumes="application/json")
-	public EntityRoom startGame(@RequestBody StartPostParams parameters) {
-		Room r = getRoom(parameters.getRoomID(), false);
-		if(r.areAllPlayersReady()) {
-			r.start();
+		if(!game.open(action.getPlayerName(), action.getCoord())) {
+			throw new IllegalArgumentException("Invalid action");
 		}
-		return r;
+
+		return game;
 	}
 
-	@GetMapping(path = "/{roomNumber}/game", produces="application/json")
-	public EntityGame getGameStatus(@PathVariable String roomNumber) {
-		Room r = getRoom(roomNumber, false);
-		return r.getGame();
-	}
-
-	@PostMapping(path = "/action", consumes="application/json", produces="application/json")
-	public EntityGame doAction(@RequestBody ActionPostParams parameters) {
-		Room r = getRoom(parameters.getRoomID(), false);
-		rooms.action(r, parameters.getClientID(), parameters.getActionsList());
-		return r.getGame();
-	}
-
-	private long getUniqueSessionId() {
-		long id = request.getRemotePort();
-		String[] list = request.getRemoteHost().split("[.:]+");
-		for(String i : list) {
-			id *= 129;
-			id += Integer.parseInt(i);
+	@GetMapping(path = "/rename", consumes = "application/json", produces="application/json")
+	public GameData rename(@RequestBody Rename rename) {
+		if(!game.renamePlayer(rename.getCurrentName(), rename.getNewName())) {
+			throw new IllegalArgumentException("Name already taken");
 		}
-		return id;
-	}
-
-	private Room getRoom(String roomNumber, boolean authorizeCreation) {
-		Room r = authorizeCreation ? rooms.getOrCreateRoom(roomNumber) : rooms.getRoom(roomNumber);
-		if(r == null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, (authorizeCreation ? "Cannot create a room " : "Could not find room ") + roomNumber);
-		}
-		r.registerPlayer(getUniqueSessionId());
-		return r;
+		return game;
 	}
 }

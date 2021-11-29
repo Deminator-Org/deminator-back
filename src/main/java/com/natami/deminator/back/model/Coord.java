@@ -1,4 +1,4 @@
-package com.natami.deminator.back.util;
+package com.natami.deminator.back.model;
 
 public class Coord {
 	private final int x;

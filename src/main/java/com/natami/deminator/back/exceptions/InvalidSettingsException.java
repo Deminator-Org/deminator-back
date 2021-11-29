@@ -1,4 +1,4 @@
-package com.natami.deminator.back.util;
+package com.natami.deminator.back.exceptions;
 
 public class InvalidSettingsException extends Exception {
 

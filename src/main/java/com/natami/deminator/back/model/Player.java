@@ -1,47 +1,33 @@
 package com.natami.deminator.back.model;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-import com.natami.deminator.back.responses.EntityPlayer;
-import com.natami.deminator.back.util.Coord;
-
-public class Player implements EntityPlayer {
+public class Player {
 	private String name;
-	private boolean isReady = false;
-	private boolean havePlayedThisTurn = false;
-	private List<Coord> actionsList;
+	private final Set<Coord> revealed = new HashSet<>();
 
-	public Player(long uniqueSessionId) {
-		this.name = "Player " + uniqueSessionId; // Make this prettier
+	public Player(String playerName) {
+		this.name = playerName;
 	}
 
-	public void setReady(boolean b) {
-		this.isReady = b;
-	}
-
-	public void setName(String newName) {
-		this.name = newName;
-	}
-
-	@Override
 	public String getName() {
-		return this.name;
+		return name;
 	}
 
-	@Override
-	public boolean isReady() {
-		return this.isReady;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public boolean alreadyPlayed() {
-		return havePlayedThisTurn;
+	public int getScore() {
+		return revealed.size();
 	}
 
-	public void setActions(List<Coord> actionsList) {
-		this.actionsList = actionsList;
+	public void reveal(Coord coord) {
+		revealed.add(coord);
 	}
 
-	public List<Coord> getActions() {
-		return this.actionsList;
+	public boolean hasRevealed(Coord coord) {
+		return revealed.contains(coord);
 	}
 }

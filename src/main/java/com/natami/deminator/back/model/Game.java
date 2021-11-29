@@ -1,126 +1,126 @@
 package com.natami.deminator.back.model;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
+import java.util.List;
 import java.util.Set;
 
-import com.natami.deminator.back.responses.EntityGame;
-import com.natami.deminator.back.util.Coord;
-import com.natami.deminator.back.util.InvalidSettingsException;
+import com.natami.deminator.back.interfaces.GameData;
 
-public class Game implements EntityGame {
-	private final Room room;
-	private final Set<Coord> discoveredCells = new HashSet<>();
+public class Game implements GameData {
+	private int width;
+	private int height;
+	private int minesCount;
 	private final Set<Coord> mines = new HashSet<>();
-	private final Map<Player, Double> scores = new HashMap<>();
-	private int turnNumber = 0;
-	private String nextTurnStartTime;
+	private final List<Player> players = new ArrayList<>();
+	private int currentPlayerIndex = 0;
 
-	public Game(Room r) throws InvalidSettingsException {
-		this.room = r;
-		this.nextTurnStartTime = r.getGameStartTime();
-		this.generateGrid();
+	public Game(int width, int height, int minesCount) {
+		this.width = width;
+		this.height = height;
+		this.minesCount = minesCount;
 	}
 
-	private void checkSettings(int minesCount) throws InvalidSettingsException {
-		if(room.getWidth() < 1) {
-			throw new InvalidSettingsException("width:" + getWidth());
-		}
-		if(room.getHeight() < 1) {
-			throw new InvalidSettingsException("height:" + getHeight());
-		}
-		if(minesCount >= getWidth()*getHeight()) {
-			throw new InvalidSettingsException("minesCount:" + minesCount + ", width:" + getWidth()+ ", height:" + getHeight());
-		}
-	}
-	public void generateGrid() throws InvalidSettingsException {
-		checkSettings(room.getMinesCount());
-		Random r = new Random(room.getSeed().hashCode());
-
-		// add mines
-		while(mines.size() < room.getMinesCount()) {
-			Coord randomCoord = new Coord(r.nextInt(getWidth()), r.nextInt(getHeight()));
-			mines.add(randomCoord);
-		}
-	}
-
-
-	public void update() {
-		if(nextTurnStartTime == null) {
-			// Game has ended
-			return;
-		}
-		String now = getISOCurrentTime(0);
-		if(now.compareTo(nextTurnStartTime) > 0) {
-			// get players actions
-			for(Player p : room.getPlayerList()) {
-				if(p.getActions() != null) {
-					discoveredCells.addAll(p.getActions());
-					p.setActions(null);
-				}
-			}
-
-			if(discoveredCells.containsAll(mines)) {
-				// End of the game
-				nextTurnStartTime = null;
-			} else {
-				// Set next turn
-				turnNumber++;
-				nextTurnStartTime = getISOCurrentTime(room.getTurnDuration());
-			}
-		}
-	}
-
-	@Override
 	public int getWidth() {
-		return room.getWidth();
+		return width;
 	}
 
-	@Override
 	public int getHeight() {
-		return room.getHeight();
+		return height;
+	}
+
+	public int getMinesCount() {
+		return minesCount;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
+	}
+
+	public void setMinesCount(int minesCount) {
+		this.minesCount = minesCount;
 	}
 
 	@Override
-	public Set<Coord> getMines() {
+	public Collection<Player> getPlayers() {
+		return players;
+	}
+
+	@Override
+	public Collection<Coord> getMines() {
 		return mines;
 	}
 
-	@Override
-	public Set<Coord> getOpenCells() {
-		return discoveredCells;
-	}
-
-	@Override
-	public Map<String, Integer> getScores() {
-		Map<String, Integer> scores = new HashMap<>();
-		for(Player p : this.scores.keySet()) {
-			int score = (int)((double) this.scores.get(p));
-			if(score > 0) {
-				scores.put(p.getName(), score);
+	// Add minecount different coords in the mines set except for the given coord
+	public void generateMines(Coord coord) {
+		mines.clear();
+		while(mines.size() < minesCount) {
+			Coord mine = new Coord((int) (Math.random() * width), (int) (Math.random() * height));
+			if(!mine.equals(coord) && !mines.contains(mine)) {
+				mines.add(mine);
 			}
 		}
-		return scores;
+	}
+
+	public boolean hasGeneratedMines() {
+		return !mines.isEmpty();
+	}
+
+	public boolean renamePlayer(String currentName, String newName) {
+		if(currentName != newName) return true;
+		if(players.stream().anyMatch(p -> p.getName().equals(newName))) return false;
+		for(Player player : players) {
+			if(player.getName().equals(currentName)) {
+				player.setName(newName);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean areAllMinesRevealed() {
+		for(Coord mine : mines) {
+			if(whoRevealed(mine) == null) {
+				return false;
+			}
+		}
+		return hasGeneratedMines();
+	}
+
+	public Player whoRevealed(Coord coord) {
+		for(Player player : players) {
+			if(player.hasRevealed(coord)) {
+				return player;
+			}
+		}
+		return null;
+	}
+	public boolean open(String playername, Coord coord) {
+		Player revealer = whoRevealed(coord);
+		if(revealer != null) return revealer.getName().equals(playername);
+
+		for(Player player : players) {
+			if(player.getName().equals(playername)) {
+				player.reveal(coord);
+				currentPlayerIndex = (currentPlayerIndex+1) % players.size();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public void newPlayer(String playerName) {
+		players.add(new Player(playerName));
 	}
 
 	@Override
-	public String getNextTurnStartTime() {
-		return this.nextTurnStartTime;
-	}
-
-	@Override
-	public int getTurnNumber() {
-		return turnNumber;
-	}
-
-	private String getISOCurrentTime(int plus) {
-		Calendar startTime = Calendar.getInstance();
-		startTime.add(Calendar.SECOND, plus);
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		return formatter.format(startTime.getTime()); // e.g. 2000-12-31T23:59:59
+	public String getCurrentPlayerName() {
+		return players.get(currentPlayerIndex).getName();
 	}
 }
+

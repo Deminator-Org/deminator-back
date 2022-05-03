@@ -1,5 +1,7 @@
 package com.natami.deminator.back.interfaces;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.natami.deminator.back.interfaces.sub.DeminatorSettings;
 
@@ -16,7 +18,7 @@ public class GameSetup {
 		return settings;
 	}
 
-	@JsonProperty(value="playername")
+	@JsonProperty(value="playerName")
 	public String getPlayerName() {
 		return playerName;
 	}
@@ -29,4 +31,12 @@ public class GameSetup {
 		this.playerName = playerName;
 	}
 
+	public List<String> validate() {
+		List<String> errors = this.settings.validate();
+
+		if(playerName == null || playerName.isEmpty()) {
+			errors.add("Player name is not set or empty");
+		}
+		return errors;
+	}
 }

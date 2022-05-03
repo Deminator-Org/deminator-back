@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.natami.deminator.back.interfaces.GameData;
+import com.natami.deminator.back.interfaces.sub.DeminatorSettings;
 
 public class Game implements GameData {
 	private int width;
@@ -16,10 +17,12 @@ public class Game implements GameData {
 	private final List<Player> players = new ArrayList<>();
 	private int currentPlayerIndex = 0;
 
-	public Game(int width, int height, int minesCount) {
-		this.width = width;
-		this.height = height;
-		this.minesCount = minesCount;
+	public Game(DeminatorSettings settings) {
+		this.width = settings.getWidth();
+		this.height = settings.getHeight();
+		this.minesCount = settings.getMinesCount();
+
+		this.generateMines();
 	}
 
 
@@ -46,11 +49,11 @@ public class Game implements GameData {
 	}
 
 	// Add minecount different coords in the mines set except for the given coord
-	public void generateMines(Coord coord) {
+	public void generateMines() {
 		mines.clear();
 		while(mines.size() < minesCount) {
 			Coord mine = new Coord((int) (Math.random() * width), (int) (Math.random() * height));
-			if(!mine.equals(coord) && !mines.contains(mine)) {
+			if(!mines.contains(mine)) {
 				mines.add(mine);
 			}
 		}

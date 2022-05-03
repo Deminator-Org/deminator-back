@@ -1,5 +1,8 @@
 package com.natami.deminator.back.rest;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.natami.deminator.back.exceptions.InvalidSettingsException;
 import com.natami.deminator.back.interfaces.GameData;
 import com.natami.deminator.back.interfaces.GameSetup;
@@ -24,13 +27,11 @@ public class Controller {
 
 	@GetMapping(path = "/", produces="application/json")
 	public String index() {
-		System.out.println("index");
 		return "{}";
 	}
 
 	@GetMapping(path = "/gameData", produces="application/json")
 	public GameData getGameData() {
-		System.out.println("getGameData");
 		if(game == null) {
 			throw new IllegalStateException("Game not initialized");
 		}
@@ -41,38 +42,37 @@ public class Controller {
 
 	@PostMapping(path = "/gameSetup", consumes = "application/json", produces="application/json")
 	public GameData gameSetup(@RequestBody GameSetup parameters) throws InvalidSettingsException {
-		System.out.println("gameSetup");
-		if(game == null) {
-			DeminatorSettings settings = parameters.getSettings();
+		// // // Check game status
 
-			// Check parameters, send InvalidSettingsException in case of error
-			if(settings.getWidth() <= 0) {
-				throw new InvalidSettingsException("Width must be positive");
-			} else if(settings.getHeight() <= 0) {
-				throw new InvalidSettingsException("Height must be positive");
-			} else if(settings.getMinesCount() <= 0) {
-				throw new InvalidSettingsException("Mines count must be positive");
-			} else if(settings.getMinesCount() >= settings.getWidth() * settings.getHeight()) {
-				throw new InvalidSettingsException("Mines count must be less than board size (" + settings.getWidth() * settings.getHeight() + ")");
-			}
-
-			game = new Game(settings.getWidth(), settings.getHeight(), settings.getMinesCount());
+		if(game != null) {
+			throw new IllegalStateException("Game already initialized");
 		}
 
+		// // // Check parameters
+
+		List<String> errors = parameters.validate();
+		if(!errors.isEmpty()) {
+			System.out.println(new InvalidSettingsException(errors).getMessage());
+			throw new InvalidSettingsException(errors);
+		}
+
+		// // // All params ok: Apply command
+
+		// Create the new game
+		game = new Game(parameters.getSettings());
+
+		// Add player to the game
 		if(!game.getPlayers().stream().anyMatch(p -> p.getName().equals(parameters.getPlayerName()))) {
 			game.newPlayer(parameters.getPlayerName());
 		}
+
+		// // // Return response
 
 		return getGameData();
 	}
 
 	@PostMapping(path = "/reveal", consumes = "application/json", produces="application/json")
 	public GameData getMines(@RequestBody PlayerAction action) {
-		System.out.println("getMines");
-		if(!game.hasGeneratedMines()) {
-			game.generateMines(action.getCoord());
-		}
-
 		if(!game.open(action.getPlayerName(), action.getCoord())) {
 			throw new IllegalArgumentException("Invalid action");
 		}
@@ -82,7 +82,6 @@ public class Controller {
 
 	@PostMapping(path = "/rename", consumes = "application/json", produces="application/json")
 	public GameData rename(@RequestBody Rename rename) {
-		System.out.println("rename");
 		if(!game.renamePlayer(rename.getCurrentName(), rename.getNewName())) {
 			throw new IllegalArgumentException("Name already taken");
 		}

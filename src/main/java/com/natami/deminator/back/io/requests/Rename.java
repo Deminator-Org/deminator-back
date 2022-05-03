@@ -1,4 +1,4 @@
-package com.natami.deminator.back.interfaces;
+package com.natami.deminator.back.io.requests;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

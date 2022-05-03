@@ -1,17 +1,14 @@
-package com.natami.deminator.back.interfaces;
+package com.natami.deminator.back.io.requests;
 
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.natami.deminator.back.interfaces.sub.DeminatorSettings;
+import com.natami.deminator.back.io.requests.sub.DeminatorSettings;
 
 public class GameSetup {
 
 	private DeminatorSettings settings;
 	private String playerName;
-
-	public GameSetup() {
-	}
 
 	@JsonProperty(value="settings")
 	public DeminatorSettings getSettings() {
@@ -30,6 +27,8 @@ public class GameSetup {
 	public void setPlayerName(String playerName) {
 		this.playerName = playerName;
 	}
+
+
 
 	public List<String> validate() {
 		List<String> errors = this.settings.validate();

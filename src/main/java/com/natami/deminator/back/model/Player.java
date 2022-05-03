@@ -30,4 +30,8 @@ public class Player {
 	public boolean hasRevealed(Coord coord) {
 		return revealed.contains(coord);
 	}
+
+	public Set<Coord> getRevealed() {
+		return revealed;
+	}
 }

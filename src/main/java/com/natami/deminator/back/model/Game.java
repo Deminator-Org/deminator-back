@@ -4,43 +4,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
-import com.natami.deminator.back.interfaces.GameData;
-import com.natami.deminator.back.interfaces.sub.DeminatorSettings;
+import com.natami.deminator.back.io.requests.sub.DeminatorSettings;
+import com.natami.deminator.back.io.responses.GameData;
 
 public class Game implements GameData {
-	private int width;
-	private int height;
-	private int minesCount;
+	private DeminatorSettings settings;
 	private final Set<Coord> mines = new HashSet<>();
 	private final List<Player> players = new ArrayList<>();
 	private int currentPlayerIndex = 0;
 
 	public Game(DeminatorSettings settings) {
-		this.width = settings.getWidth();
-		this.height = settings.getHeight();
-		this.minesCount = settings.getMinesCount();
+		this.settings = settings;
 
 		this.generateMines();
-	}
-
-
-	@Override
-	public Collection<Coord> getGrid() {
-		return mines;
-	}
-
-	public void setWidth(int width) {
-		this.width = width;
-	}
-
-	public void setHeight(int height) {
-		this.height = height;
-	}
-
-	public void setMinesCount(int minesCount) {
-		this.minesCount = minesCount;
 	}
 
 	@Override
@@ -48,12 +27,39 @@ public class Game implements GameData {
 		return players;
 	}
 
+	@Override
+	public String getCurrentPlayerName() {
+		return players.get(currentPlayerIndex).getName();
+	}
+
+	@Override
+	public DeminatorSettings getSettings() {
+		return this.settings;
+	}
+
+
+	@Override
+	public Collection<Coord> getRevealedMines() {
+		Set<Coord> revealedCells = new HashSet<>();
+		for (Player player : players) {
+			revealedCells.addAll(player.getRevealed());
+		}
+		revealedCells.retainAll(mines);
+		return revealedCells;
+	}
+
 	// Add minecount different coords in the mines set except for the given coord
 	public void generateMines() {
 		mines.clear();
+
+		Random random = new Random(settings.getSeed());
+
+		int minesCount = settings.getMinesCount();
+		int width = settings.getWidth();
+		int height = settings.getHeight();
 		while(mines.size() < minesCount) {
-			Coord mine = new Coord((int) (Math.random() * width), (int) (Math.random() * height));
-			if(!mines.contains(mine)) {
+			for(int i=mines.size(); i<minesCount; i++) {
+				Coord mine = new Coord(random.nextInt(width), random.nextInt(height));
 				mines.add(mine);
 			}
 		}
@@ -110,9 +116,6 @@ public class Game implements GameData {
 		players.add(new Player(playerName));
 	}
 
-	@Override
-	public String getCurrentPlayerName() {
-		return players.get(currentPlayerIndex).getName();
-	}
+
 }
 

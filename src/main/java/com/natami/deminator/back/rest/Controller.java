@@ -1,15 +1,13 @@
 package com.natami.deminator.back.rest;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.natami.deminator.back.exceptions.InvalidSettingsException;
-import com.natami.deminator.back.interfaces.GameData;
-import com.natami.deminator.back.interfaces.GameSetup;
-import com.natami.deminator.back.interfaces.PlayerAction;
-import com.natami.deminator.back.interfaces.Rename;
-import com.natami.deminator.back.interfaces.sub.DeminatorSettings;
+import com.natami.deminator.back.io.requests.GameSetup;
+import com.natami.deminator.back.io.requests.Rename;
 import com.natami.deminator.back.model.Game;
+import com.natami.deminator.back.io.responses.GameData;
+import com.natami.deminator.back.io.responses.PlayerAction;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,6 +71,14 @@ public class Controller {
 
 	@PostMapping(path = "/reveal", consumes = "application/json", produces="application/json")
 	public GameData getMines(@RequestBody PlayerAction action) {
+		// // // Check game status
+
+		if(game == null) {
+			throw new IllegalStateException("Game is not initialized");
+		}
+
+		// // // Check parameters
+
 		if(!game.open(action.getPlayerName(), action.getCoord())) {
 			throw new IllegalArgumentException("Invalid action");
 		}

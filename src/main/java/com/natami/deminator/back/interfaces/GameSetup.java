@@ -1,17 +1,32 @@
 package com.natami.deminator.back.interfaces;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.natami.deminator.back.interfaces.sub.DeminatorSettings;
 
-public interface GameSetup {
-	@JsonProperty(value="width")
-	public Integer getWidth();
+public class GameSetup {
 
-	@JsonProperty(value="height")
-	public Integer getHeight();
+	private DeminatorSettings settings;
+	private String playerName;
 
-	@JsonProperty(value="mines")
-	public Integer getMinesCount();
+	public GameSetup() {
+	}
+
+	@JsonProperty(value="settings")
+	public DeminatorSettings getSettings() {
+		return settings;
+	}
 
 	@JsonProperty(value="playername")
-	public String getPlayerName();
+	public String getPlayerName() {
+		return playerName;
+	}
+
+	public void setSettings(DeminatorSettings settings) {
+		this.settings = settings;
+	}
+
+	public void setPlayerName(String playerName) {
+		this.playerName = playerName;
+	}
+
 }

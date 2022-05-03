@@ -18,3 +18,12 @@ Windows: `mvnw.cmd install`
 Unix: `./mvnw spring-boot:run`
 
 Windows: `mvnw.cmd spring-boot:run`
+
+# Test the project
+
+Unix & Windows:
+
+```sh
+cd test
+./scenario#.sh
+```

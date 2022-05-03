@@ -7,17 +7,8 @@ import com.natami.deminator.back.model.Coord;
 import com.natami.deminator.back.model.Player;
 
 public interface GameData {
-	@JsonProperty(value="width")
-	public int getWidth();
-
-	@JsonProperty(value="height")
-	public int getHeight();
-
-	@JsonProperty(value="mines")
-	public int getMinesCount();
-
-	@JsonProperty(value="mines")
-	public Collection<Coord> getMines();
+	@JsonProperty(value="grid")
+	public Collection<Coord> getGrid();
 
 	@JsonProperty(value="players")
 	public Collection<Player> getPlayers();

@@ -22,16 +22,10 @@ public class Game implements GameData {
 		this.minesCount = minesCount;
 	}
 
-	public int getWidth() {
-		return width;
-	}
 
-	public int getHeight() {
-		return height;
-	}
-
-	public int getMinesCount() {
-		return minesCount;
+	@Override
+	public Collection<Coord> getGrid() {
+		return mines;
 	}
 
 	public void setWidth(int width) {
@@ -49,11 +43,6 @@ public class Game implements GameData {
 	@Override
 	public Collection<Player> getPlayers() {
 		return players;
-	}
-
-	@Override
-	public Collection<Coord> getMines() {
-		return mines;
 	}
 
 	// Add minecount different coords in the mines set except for the given coord

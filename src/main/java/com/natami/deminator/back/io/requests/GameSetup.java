@@ -10,25 +10,30 @@ public class GameSetup {
 	private DeminatorSettings settings;
 	private String playerName;
 
-	@JsonProperty(value="settings")
-	public DeminatorSettings getSettings() {
-		return settings;
-	}
+	// // // Request Parameters
 
-	@JsonProperty(value="playerName")
-	public String getPlayerName() {
-		return playerName;
-	}
-
+	@JsonProperty(value="settings", required = true)
 	public void setSettings(DeminatorSettings settings) {
 		this.settings = settings;
 	}
 
+	@JsonProperty(value="playerName", required = true)
 	public void setPlayerName(String playerName) {
 		this.playerName = playerName;
 	}
 
 
+	// // // Getters
+
+	public DeminatorSettings getSettings() {
+		return settings;
+	}
+
+	public String getPlayerName() {
+		return playerName;
+	}
+
+	// // // Functions
 
 	public List<String> validate() {
 		List<String> errors = this.settings.validate();
@@ -36,6 +41,7 @@ public class GameSetup {
 		if(playerName == null || playerName.isEmpty()) {
 			errors.add("Player name is not set or empty");
 		}
+
 		return errors;
 	}
 }

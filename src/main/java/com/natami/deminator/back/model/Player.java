@@ -6,6 +6,7 @@ import java.util.Set;
 public class Player {
 	private String name;
 	private final Set<Coord> revealed = new HashSet<>();
+	private int lastTurnPlayed = -1;
 
 	public Player(String playerName) {
 		this.name = playerName;
@@ -19,10 +20,6 @@ public class Player {
 		this.name = name;
 	}
 
-	public int getScore() {
-		return revealed.size();
-	}
-
 	public void reveal(Coord coord) {
 		revealed.add(coord);
 	}
@@ -33,5 +30,13 @@ public class Player {
 
 	public Set<Coord> getRevealed() {
 		return revealed;
+	}
+
+	public int getLastTurnPlayed() {
+		return lastTurnPlayed;
+	}
+
+	public void setLastTurnPlayed(int lastTurnPlayed) {
+		this.lastTurnPlayed = lastTurnPlayed;
 	}
 }

@@ -9,14 +9,17 @@ import com.natami.deminator.back.model.Player;
 
 public interface GameData {
 	@JsonProperty(value="settings")
-	public DeminatorSettings getSettings();
+	DeminatorSettings getSettings();
 
 	@JsonProperty(value="players")
-	public Collection<Player> getPlayers();
+	Collection<Player> getPlayers();
 
 	@JsonProperty(value="currentPlayer")
-	public String getCurrentPlayerName();
+	String getCurrentPlayerName();
 
 	@JsonProperty(value="revealedMines")
-	public Collection<Coord> getRevealedMines();
+	Collection<Coord> getRevealedMines();
+
+	@JsonProperty(value="hasGameEnded")
+	boolean hasGameEnded();
 }

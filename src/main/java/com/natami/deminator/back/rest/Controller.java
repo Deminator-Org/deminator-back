@@ -19,20 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @CrossOrigin(origins = "*")
 public class Controller {
 
-	private Game game = null;
+	private final Game game = new Game();
 
 	// // // GET // // //
 
 	@GetMapping(path = "/", produces="application/json")
-	public String index() {
-		return "{}";
-	}
-
-	@GetMapping(path = "/gameData", produces="application/json")
 	public GameData getGameData() {
-		if(game == null) {
-			throw new IllegalStateException("Game not initialized");
-		}
 		return game;
 	}
 
@@ -40,12 +32,6 @@ public class Controller {
 
 	@PostMapping(path = "/gameSetup", consumes = "application/json", produces="application/json")
 	public GameData gameSetup(@RequestBody GameSetup parameters) throws InvalidSettingsException {
-		// // // Check game status
-
-		if(game != null) {
-			throw new IllegalStateException("Game already initialized");
-		}
-
 		// // // Check parameters
 
 		List<String> errors = parameters.validate();
@@ -57,10 +43,10 @@ public class Controller {
 		// // // All params ok: Apply command
 
 		// Create the new game
-		game = new Game(parameters.getSettings());
+		game.reset(parameters.getSettings());
 
 		// Add player to the game
-		if(!game.getPlayers().stream().anyMatch(p -> p.getName().equals(parameters.getPlayerName()))) {
+		if(game.getPlayers().stream().noneMatch(p -> p.getName().equals(parameters.getPlayerName()))) {
 			game.newPlayer(parameters.getPlayerName());
 		}
 
@@ -71,13 +57,16 @@ public class Controller {
 
 	@PostMapping(path = "/reveal", consumes = "application/json", produces="application/json")
 	public GameData getMines(@RequestBody PlayerAction action) {
-		// // // Check game status
+		// // // Check context and parameters
 
-		if(game == null) {
-			throw new IllegalStateException("Game is not initialized");
+		if(game.hasGameEnded()) {
+			throw new IllegalStateException("Game has ended");
+		}
+		if(!game.getCurrentPlayerName().equals(action.getPlayerName())) {
+			throw new IllegalStateException("Not your turn");
 		}
 
-		// // // Check parameters
+		// // // Apply action
 
 		if(!game.open(action.getPlayerName(), action.getCoord())) {
 			throw new IllegalArgumentException("Invalid action");

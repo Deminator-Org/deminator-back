@@ -4,12 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.natami.deminator.back.model.Coord;
 
 public class PlayerAction {
-	private String playerName;
+	private String playerId;
 	private Coord coord;
 
-	@JsonProperty(value="playerName")
-	public void setPlayerName(String playerName) {
-		this.playerName = playerName;
+	@JsonProperty(value="id")
+	public void setPlayerId(String playerId) {
+		this.playerId = playerId;
 	}
 
 	@JsonProperty(value="coord")
@@ -17,8 +17,8 @@ public class PlayerAction {
 		this.coord = coord;
 	}
 
-	public String getPlayerName() {
-		return playerName;
+	public String getPlayerId() {
+		return playerId;
 	}
 
 	public Coord getCoord() {

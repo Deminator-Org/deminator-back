@@ -2,15 +2,15 @@ package com.natami.deminator.back.model;
 
 import java.util.*;
 
-import com.natami.deminator.back.io.requests.sub.DeminatorSettings;
+import com.natami.deminator.back.io.requests.DeminatorSettings;
 import com.natami.deminator.back.io.responses.GameData;
+import com.natami.deminator.back.io.responses.PublicPlayerData;
 
 public class Game implements GameData {
 	private DeminatorSettings settings;
 	private final Set<Coord> mines = new HashSet<>();
-	private final List<Player> players = new ArrayList<>();
-	private final Map<Coord, Set<Player>> allRevealedCells = new HashMap<>();
-	private int currentPlayerIndex = 0;
+	private final Map<String, Player> players = new HashMap<>();
+	private final Map<Coord, Integer> allRevealedCells = new HashMap<>();
 	private int lastSynchronizedTurn = -1;
 
 	public Game() {}
@@ -18,13 +18,8 @@ public class Game implements GameData {
 	// // // GameData
 
 	@Override
-	public Collection<Player> getPlayers() {
-		return players;
-	}
-
-	@Override
-	public String getCurrentPlayerName() {
-		return players.get(currentPlayerIndex).getName();
+	public Collection<PublicPlayerData> getPlayers() {
+		return new HashSet<>(players.values()); // cast set to required subtype
 	}
 
 	@Override
@@ -33,18 +28,19 @@ public class Game implements GameData {
 	}
 
 	@Override
-	public Set<Coord> getRevealedMines() {
-		Set<Coord> revealedCells = new HashSet<>();
-		for (Player player : players) {
-			revealedCells.addAll(player.getRevealed());
-		}
-		revealedCells.retainAll(mines);
-		return revealedCells;
+	public Map<Coord, Integer> getRevealed() {
+		return allRevealedCells;
 	}
 
 	@Override
 	public boolean hasGameEnded() {
-		return getRevealedMines().size() == mines.size();
+		int revealedMinesCount = 0;
+		for (Integer value : allRevealedCells.values()) {
+			if (value < 0) {
+				revealedMinesCount++;
+			}
+		}
+		return revealedMinesCount == mines.size();
 	}
 
 	// // // Other Functions
@@ -54,7 +50,6 @@ public class Game implements GameData {
 		this.settings = settings;
 
 		// Reset game
-		currentPlayerIndex = 0;
 		players.clear();
 		mines.clear();
 
@@ -72,20 +67,8 @@ public class Game implements GameData {
 		}
 	}
 
-	public boolean renamePlayer(String currentName, String newName) {
-		if(!currentName.equals(newName)) return true;
-		if(players.stream().anyMatch(p -> p.getName().equals(newName))) return false;
-		for(Player player : players) {
-			if(player.getName().equals(currentName)) {
-				player.setName(newName);
-				return true;
-			}
-		}
-		return false;
-	}
-
 	public Player whoRevealed(Coord coord) {
-		for(Player player : players) {
+		for(Player player : players.values()) {
 			if(player.hasRevealed(coord)) {
 				return player;
 			}
@@ -93,12 +76,18 @@ public class Game implements GameData {
 		return null;
 	}
 
-	public void newPlayer(String playerName) {
-		players.add(new Player(playerName));
+	public void newPlayer(String playerId, String playerName) {
+		players.put(playerId, new Player(playerName));
 	}
 
-	public boolean open(String playername, Coord coord) {
-		Player player = getPlayerByName(playername);
+	/**
+	 * Action when player request to reveal a cell
+	 * @param playerId Unique Id of the player who does the action
+	 * @param coord Cell requested to reveal
+	 * @return true if reveal OK; false if any error
+	 */
+	public boolean open(String playerId, Coord coord) {
+		Player player = players.get(playerId);
 
 		if(player == null) {
 			// Player is not in the game
@@ -120,45 +109,57 @@ public class Game implements GameData {
 			synchronizeTurn();
 		}
 
-		player.setLastTurnPlayed(currentTurn);
-		cascadeReveal(player, coord);
+		int clue = cascadeReveal(player, coord);
+		if(clue >= 0) {
+			// Can't play till next turn if found a clue
+			player.setLastTurnPlayed(currentTurn);
+		}
 
 		return true;
 	}
 
+	public Player getPlayerById(String playerId) {
+		return players.get(playerId);
+	}
+
 	// // // Private functions
 
-	private Player getPlayerByName(String playerName) {
-		for(Player player : players) {
-			if(player.getName().equals(playerName)) {
-				return player;
-			}
-		}
-		return null;
-	}
 
+	/**
+	 * @return Current game turn number (calculated from settings and current date), or -1 if game isn't started yet.
+	 */
 	private int getCurrentTurn() {
-		if(settings.getStartDate().before(new Date())) {
+		Date now = new Date();
+		if(settings.getStartDate().before(now)) {
+			// Game has not started yet
 			return -1;
 		}
-		if(settings.getTurnDuration() <= 0) {
-			// 1ms per turn
-			return (int)(new Date().getTime() - settings.getStartDate().getTime());
+
+		if(hasGameEnded()) {
+			// On game end, stop incrementing current turn
+			return lastSynchronizedTurn;
 		}
 
-		return ((int) (new Date().getTime() - settings.getStartDate().getTime()) / settings.getTurnDuration()*1000);
+		int msSinceGameBegan = (int)(now.getTime() - settings.getStartDate().getTime());
+		if(settings.getTurnDuration() <= 0) {
+			// 1ms per turn
+			return msSinceGameBegan;
+		}
+
+		return msSinceGameBegan / (settings.getTurnDuration()*1000);
 	}
 
+	/**
+	 * Gather all player data from last turn to public game data
+	 */
 	private void synchronizeTurn() {
 		Set<Coord> alreadySynchronized = allRevealedCells.keySet();
 
-		for (Player player : players) {
-			for(Coord c : player.getRevealed()) {
+		for (Player player : players.values()) {
+			Map<Coord, Integer> revealed = player.getRevealed();
+			for(Coord c : revealed.keySet()) {
 				if(!alreadySynchronized.contains(c)) {
-					if(!allRevealedCells.containsKey(c)) {
-						allRevealedCells.put(c, new HashSet<>());
-					}
-					allRevealedCells.get(c).add(player);
+					allRevealedCells.put(c, revealed.get(c));
 				}
 			}
 		}
@@ -166,16 +167,26 @@ public class Game implements GameData {
 		this.lastSynchronizedTurn = getCurrentTurn();
 	}
 
-	private void cascadeReveal(Player player, Coord coord) {
-		player.reveal(coord);
+	/**
+	 * Reveal the given cell to the player. Reveal also surrounding if current cell is blank.
+	 * @param player Who does the reveal
+	 * @param coord Where to reveal
+	 * @return given coord clue
+	 */
+	private int cascadeReveal(Player player, Coord coord) {
+		int clue = getClue(coord);
+		player.reveal(coord, clue);
 
-		if(getClue(coord) == 0) {
+		if(clue == 0) {
+			// If blank cell, cascade-reveal surrounding cells
 			Set<Coord> around = coord.around();
 			around.removeAll(allRevealedCells.keySet());
 			for (Coord c : around) {
 				cascadeReveal(player, c);
 			}
 		}
+
+		return clue;
 	}
 
 	/**

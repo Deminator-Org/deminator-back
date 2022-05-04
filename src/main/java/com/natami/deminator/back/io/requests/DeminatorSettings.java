@@ -1,4 +1,4 @@
-package com.natami.deminator.back.io.requests.sub;
+package com.natami.deminator.back.io.requests;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -16,30 +16,25 @@ public class DeminatorSettings {
 	private Date startDate;
 
 	public DeminatorSettings() {
-		// Initiate random seed by default
+		// Initiate default values
 		seed = ((Long)System.currentTimeMillis()).hashCode();
 	}
 
 	// // // Request Parameters
 
-	@JsonProperty(value="width")
+	@JsonProperty(value="width", required = true)
 	public void setWidth(int width) {
 		this.width = width;
 	}
 
-	@JsonProperty(value="height")
+	@JsonProperty(value="height", required = true)
 	public void setHeight(int height) {
 		this.height = height;
 	}
 
-	@JsonProperty(value="mines")
+	@JsonProperty(value="mines", required = true)
 	public void setMinesCount(int minesCount) {
 		this.minesCount = minesCount;
-	}
-
-	@JsonProperty(value="seed", required=false)
-	public void setSeed(Object seed) {
-		this.seed = seed.hashCode();
 	}
 
 	@JsonProperty(value="turnDuration", required = true)
@@ -47,10 +42,15 @@ public class DeminatorSettings {
 		this.turnDuration = turnDuration;
 	}
 
-	@JsonProperty(value="startTimeout", required = true)
+	@JsonProperty(value="startTimeout", required = false, defaultValue = "3")
 	public void setStartTimeout(int timeout) {
 		long time = new Date().getTime() + timeout * 1000;
 		this.startDate = new Date(time);
+	}
+
+	@JsonProperty(value="seed", required=false)
+	public void setSeed(String seed) {
+		this.seed = seed.hashCode();
 	}
 
 	// // // Getters

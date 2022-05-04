@@ -8,16 +8,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DeminatorSettings {
 
+	private final long date;
 	private int width;
 	private int height;
 	private int minesCount;
-	private int seed;
+	private long seed;
 	private int turnDuration;
-	private Date startDate;
+	private int startTimeout;
 
 	public DeminatorSettings() {
 		// Initiate default values
 		seed = ((Long)System.currentTimeMillis()).hashCode();
+		date = new Date().getTime();
 	}
 
 	// // // Request Parameters
@@ -44,13 +46,12 @@ public class DeminatorSettings {
 
 	@JsonProperty(value="startTimeout", required = false, defaultValue = "3")
 	public void setStartTimeout(int timeout) {
-		long time = new Date().getTime() + timeout * 1000;
-		this.startDate = new Date(time);
+		this.startTimeout = timeout;
 	}
 
 	@JsonProperty(value="seed", required=false)
-	public void setSeed(String seed) {
-		this.seed = seed.hashCode();
+	public void setSeed(long seed) {
+		this.seed = seed;
 	}
 
 	// // // Getters
@@ -67,7 +68,7 @@ public class DeminatorSettings {
 		return minesCount;
 	}
 
-	public int getSeed() {
+	public long getSeed() {
 		return seed;
 	}
 
@@ -75,8 +76,12 @@ public class DeminatorSettings {
 		return turnDuration;
 	}
 
+	public int getStartTimeout() {
+		return startTimeout;
+	}
+
 	public Date getStartDate() {
-		return startDate;
+		return new Date(date + startTimeout * 1000);
 	}
 
 	// // // Other Functions
@@ -85,22 +90,22 @@ public class DeminatorSettings {
 		List<String> errors = new ArrayList<>();
 
 		if(width <= 0) {
-			errors.add("Width is not set or is less than 1");
+			errors.add("Width should be grater than or equal to 1");
 		}
 		if(height <= 0) {
-			errors.add("Height is not set or is less than 1");
+			errors.add("Height should be greater than or equal to 1");
 		}
 		if(minesCount <= 0) {
-			errors.add("Mines count is not set or is less than 1");
+			errors.add("Mines count should be greater than or equal to 1");
 		}
-		if(minesCount >= width * height / 2) {
-			errors.add("There can't be more Mines than free cells");
+		if(width > 0 && height > 0 && minesCount > width * height / 2) {
+			errors.add("Mines count should be lower than half the grid size (max:" + (width * height / 2) + ")");
 		}
-		if(startDate.before(new Date())) {
-			errors.add("Start date is in the past");
+		if(startTimeout < 0) {
+			errors.add("Start timeout should be greater than or equal to 0");
 		}
 		if(turnDuration < 0) {
-			errors.add("Turn duration is lower than 0");
+			errors.add("Turn duration should be greater than or equal to 0");
 		}
 		return errors;
 	}

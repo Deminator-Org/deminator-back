@@ -1,6 +1,7 @@
 package com.natami.deminator.back.io.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class PlayerGameData {
 	private final SecretPlayerData secretPlayerData;
@@ -17,6 +18,7 @@ public class PlayerGameData {
 	}
 
 	@JsonProperty(value = "player")
+	@JsonSerialize(as=SecretPlayerData.class)
 	SecretPlayerData getPlayerData() {
 		return this.secretPlayerData;
 	}

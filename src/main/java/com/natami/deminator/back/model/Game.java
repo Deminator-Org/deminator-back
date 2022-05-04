@@ -2,10 +2,12 @@ package com.natami.deminator.back.model;
 
 import java.util.*;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.natami.deminator.back.io.requests.DeminatorSettings;
 import com.natami.deminator.back.io.responses.GameData;
 import com.natami.deminator.back.io.responses.PublicPlayerData;
 
+@JsonSerialize(as=GameData.class)
 public class Game implements GameData {
 	private DeminatorSettings settings;
 	private final Set<Coord> mines = new HashSet<>();
@@ -84,30 +86,27 @@ public class Game implements GameData {
 	 * Action when player request to reveal a cell
 	 * @param playerId Unique Id of the player who does the action
 	 * @param coord Cell requested to reveal
-	 * @return true if reveal OK; false if any error
+	 * @return Error message, null if everything is ok
 	 */
-	public boolean open(String playerId, Coord coord) {
+	public String open(String playerId, Coord coord) {
 		Player player = players.get(playerId);
 
 		if(player == null) {
 			// Player is not in the game
-			return false;
+			return "Player is not in the game: " + playerId;
 		}
 
 		if(whoRevealed(coord) != null) {
 			// Cell already revealed
-			return player.hasRevealed(coord);
+			return "Cell is already revealed: " + coord;
 		}
 
 		int currentTurn = getCurrentTurn();
 		if(player.getLastTurnPlayed() >= currentTurn) {
-			// Player has already played this turn
-			return false;
+			return "Player has already played this turn: " + currentTurn;
 		}
 
-		if(lastSynchronizedTurn < currentTurn) {
-			synchronizeTurn();
-		}
+		updateStatus();
 
 		int clue = cascadeReveal(player, coord);
 		if(clue >= 0) {
@@ -115,11 +114,18 @@ public class Game implements GameData {
 			player.setLastTurnPlayed(currentTurn);
 		}
 
-		return true;
+		return null;
 	}
 
 	public Player getPlayerById(String playerId) {
 		return players.get(playerId);
+	}
+
+	public void updateStatus() {
+		int currentTurn = getCurrentTurn();
+		if(lastSynchronizedTurn < currentTurn) {
+			synchronizeTurn();
+		}
 	}
 
 	// // // Private functions
@@ -130,7 +136,7 @@ public class Game implements GameData {
 	 */
 	private int getCurrentTurn() {
 		Date now = new Date();
-		if(settings.getStartDate().before(now)) {
+		if(settings.getStartDate().after(now)) {
 			// Game has not started yet
 			return -1;
 		}
@@ -174,9 +180,17 @@ public class Game implements GameData {
 	 * @return given coord clue
 	 */
 	private int cascadeReveal(Player player, Coord coord) {
-		int clue = getClue(coord);
-		player.reveal(coord, clue);
+		if(coord.getX() < 0 || coord.getY() < 0 || coord.getX() >= settings.getWidth() || coord.getY() >= settings.getHeight()) {
+			// Out of bounds
+			return -1;
+		}
 
+		int clue = getClue(coord);
+		if(player.hasRevealed(coord)) {
+			return clue;
+		}
+
+		player.reveal(coord, clue);
 		if(clue == 0) {
 			// If blank cell, cascade-reveal surrounding cells
 			Set<Coord> around = coord.around();

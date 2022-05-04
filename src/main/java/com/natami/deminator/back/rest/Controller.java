@@ -2,20 +2,14 @@ package com.natami.deminator.back.rest;
 
 import java.util.List;
 
+import com.natami.deminator.back.exceptions.InvalidActionException;
 import com.natami.deminator.back.exceptions.InvalidSettingsException;
-import com.natami.deminator.back.io.requests.NewPlayer;
-import com.natami.deminator.back.io.requests.DeminatorSettings;
-import com.natami.deminator.back.io.responses.PlayerGameData;
+import com.natami.deminator.back.io.requests.*;
+import com.natami.deminator.back.io.responses.*;
 import com.natami.deminator.back.model.Game;
-import com.natami.deminator.back.io.responses.GameData;
-import com.natami.deminator.back.io.responses.PlayerAction;
 
 import com.natami.deminator.back.model.Player;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -27,22 +21,22 @@ public class Controller {
 
 	@GetMapping(path = "/", produces="application/json")
 	public GameData getPublicGameData() {
+		game.updateStatus();
 		return game;
 	}
 
-	@GetMapping(path = "/", produces="application/json")
-	public PlayerGameData getPlayerGameData(@RequestBody String playerId) {
-		return new PlayerGameData(game.getPlayerById(playerId), game);
+	@GetMapping(path = "/status", produces="application/json")
+	public PlayerGameData getPlayerGameData(@RequestBody PlayerId player) {
+		return getPlayerGameData(player.getId());
 	}
 
 	// // // POST // // //
 
 	@PostMapping(path = "/gameSetup", consumes = "application/json", produces="application/json")
-	public GameData gameSetup(@RequestBody DeminatorSettings params) throws InvalidSettingsException {
+	public GameData doGameSetup(@RequestBody DeminatorSettings params) throws InvalidSettingsException {
 		// // // Check parameters
 		List<String> errors = params.validate();
 		if(!errors.isEmpty()) {
-			System.out.println(new InvalidSettingsException(errors).getMessage());
 			throw new InvalidSettingsException(errors);
 		}
 
@@ -54,17 +48,18 @@ public class Controller {
 	}
 
 	@PostMapping(path = "/reveal", consumes = "application/json", produces="application/json")
-	public PlayerGameData getMines(@RequestBody PlayerAction action) {
+	public PlayerGameData doReveal(@RequestBody PlayerAction action) throws InvalidActionException {
 		// // // Check context and parameters
 
 		if(game.hasGameEnded()) {
-			throw new IllegalStateException("Game has ended");
+			throw new InvalidActionException("Game has ended");
 		}
 
 		// // // Apply action
 
-		if(!game.open(action.getPlayerId(), action.getCoord())) {
-			throw new IllegalArgumentException("Invalid action");
+		String error = game.open(action.getPlayerId(), action.getCoord());
+		if(error != null) {
+			throw new InvalidActionException(error);
 		}
 
 		return getPlayerGameData(action.getPlayerId());
@@ -80,5 +75,24 @@ public class Controller {
 		}
 
 		return getPlayerGameData(params.getId());
+	}
+
+	// // // EXCEPTION // // //
+	@ExceptionHandler(InvalidSettingsException.class)
+	@ResponseBody
+	public String outputInvalidSettings(InvalidSettingsException e) {
+		return e.getMessage();
+	}
+
+	@ExceptionHandler(InvalidActionException.class)
+	@ResponseBody
+	public String outputInvalidAction(InvalidActionException e) {
+		return e.getMessage();
+	}
+
+	// // // Functions // // //
+	private PlayerGameData getPlayerGameData(String id) {
+		game.updateStatus();
+		return new PlayerGameData(game.getPlayerById(id), game);
 	}
 }

@@ -1,12 +1,15 @@
 package com.natami.deminator.back.model;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.natami.deminator.back.io.responses.PublicPlayerData;
 import com.natami.deminator.back.io.responses.SecretPlayerData;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class Player implements SecretPlayerData, PublicPlayerData {
+@JsonSerialize(as=PublicPlayerData.class)
+public class Player implements PublicPlayerData, SecretPlayerData {
 	private String name;
 	private final Map<Coord, Integer> revealed = new HashMap<>();
 	private int lastTurnPlayed = -1;
@@ -17,23 +20,25 @@ public class Player implements SecretPlayerData, PublicPlayerData {
 
 	// // // Overrides PublicPlayerData
 
-
+	@Override
 	public String getName() {
 		return name;
 	}
 
-	public int getLastTurnPlayed() {
-		return lastTurnPlayed;
-	}
-
 	// // // Overrides SecretPlayerData
 
+	@JsonView(SecretPlayerData.class)
+	@Override
 	public Map<Coord, Integer> getRevealed() {
 		return revealed;
 	}
 
 
 	// // // Others functions
+
+	public int getLastTurnPlayed() {
+		return lastTurnPlayed;
+	}
 
 	public void setName(String name) {
 		this.name = name;

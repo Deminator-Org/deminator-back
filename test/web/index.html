@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Deminator</title>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="main.js"></script>
+	<link rel="stylesheet" href="main.css"/>
+
+</head>
+<body onload="onPageLoad()">
+
+	<div id="settings">
+		<table>
+			<tr><td>Server URL:</td><td><input id="settings-url"/><button id="settings-connect">Go</button></td></tr>
+		</table>
+	</div>
+
+	<!-- Setup a game -->
+	<div id="setup-div">
+		<table>
+			<tr><td>Width:</td><td><input id="setup-Width" type="number" min="3" max="999" value="10"/></td></tr>
+			<tr><td>Height:</td><td><input id="setup-Height" type="number" min="3" max="999" value="10"/></td></tr>
+			<tr><td>Mines:</td><td><input id="setup-Mines" type="number" min="1" max="49" value="10"/></td></tr>
+			<tr><td>Turn Duration (seconds):</td><td><input id="setup-Turn" type="number" min="0" max="600" value="30"/></td></tr>
+			<tr><td>Start Timeout (seconds):</td><td><input id="setup-Start" type="number" min="0" max="999" value="10"/></td></tr>
+			<tr><td>Seed:</td><td><input id="setup-Seed" placeholder="(random)" value=""/></td></tr>
+			<tr><td colspan="2"><button id="setup-Send">(re)Set the game</button></td></tr>
+		</table>
+	</div>
+
+	<!-- Register/Rename Player -->
+	<div id="rename-div">
+		<table>
+			<tr><td>Player Id:</td><td><input id="rename-id" maxlength="16"/></td></tr>
+			<tr><td>Display Name:</td><td><input id="rename-name" maxlength="16"/></td></tr>
+			<tr><td colspan="2"><button id="rename-Send">Register/Rename</button></td></tr>
+		</table>
+	</div>
+
+	<!-- Game -->
+	<div id="game-div">
+		<table id="game-table">
+			<!-- Grid -->
+			<tr><td>Please wait...</td></tr>
+		</table>
+	</div>
+
+</body>
+</html>

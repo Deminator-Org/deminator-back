@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.natami.deminator.back.exceptions.InvalidActionException;
 import com.natami.deminator.back.exceptions.InvalidSettingsException;
+import com.natami.deminator.back.model.Settings;
 import com.natami.deminator.back.io.requests.*;
 import com.natami.deminator.back.io.responses.*;
 import com.natami.deminator.back.model.Game;
@@ -33,7 +34,7 @@ public class Controller {
 	// // // POST // // //
 
 	@PostMapping(path = "/gameSetup", consumes = "application/json", produces="application/json")
-	public GameData doGameSetup(@RequestBody DeminatorSettings params) throws InvalidSettingsException {
+	public GameData doGameSetup(@RequestBody Settings params) throws InvalidSettingsException {
 		// // // Check parameters
 		List<String> errors = params.validate();
 		if(!errors.isEmpty()) {

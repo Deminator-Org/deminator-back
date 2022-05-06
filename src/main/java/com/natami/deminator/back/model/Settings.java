@@ -1,12 +1,14 @@
-package com.natami.deminator.back.io.requests;
+package com.natami.deminator.back.model;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.natami.deminator.back.io.requests.SettingsRequest;
+import com.natami.deminator.back.io.responses.SettingsResponse;
 
-public class DeminatorSettings {
+public class Settings implements SettingsRequest, SettingsResponse {
 
 	private final long date;
 	private int width;
@@ -16,73 +18,51 @@ public class DeminatorSettings {
 	private int turnDuration;
 	private int startTimeout;
 
-	public DeminatorSettings() {
+	public Settings() {
 		// Initiate default values
 		seed = ((Long)System.currentTimeMillis()).hashCode();
 		date = new Date().getTime();
 	}
 
-	// // // Request Parameters
+	// // // As Request
 
-	@JsonProperty(value="width", required = true)
-	public void setWidth(int width) {
-		this.width = width;
-	}
-
-	@JsonProperty(value="height", required = true)
-	public void setHeight(int height) {
-		this.height = height;
-	}
-
-	@JsonProperty(value="mines", required = true)
-	public void setMinesCount(int minesCount) {
-		this.minesCount = minesCount;
-	}
-
-	@JsonProperty(value="turnDuration", required = true)
-	public void setTurnDuration(int turnDuration) {
-		this.turnDuration = turnDuration;
-	}
-
-	@JsonProperty(value="startTimeout", required = false, defaultValue = "3")
-	public void setStartTimeout(int timeout) {
-		this.startTimeout = timeout;
-	}
-
-	@JsonProperty(value="seed", required=false)
-	public void setSeed(long seed) {
-		this.seed = seed;
-	}
-
-	// // // Getters
-
-	public Integer getWidth() {
+	@Override
+	public int getWidth() {
 		return width;
 	}
 
-	public Integer getHeight() {
+	@Override
+	public int getHeight() {
 		return height;
 	}
 
-	public Integer getMinesCount() {
+	@Override
+	public int getMinesCount() {
 		return minesCount;
 	}
 
+	@Override
 	public long getSeed() {
 		return seed;
 	}
 
+	@Override
 	public int getTurnDuration() {
 		return turnDuration;
 	}
 
+	@Override
 	public int getStartTimeout() {
 		return startTimeout;
 	}
 
+	// // // As Response
+
+	@Override
 	public Date getStartDate() {
 		return new Date(date + startTimeout * 1000);
 	}
+
 
 	// // // Other Functions
 

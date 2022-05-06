@@ -3,13 +3,12 @@ package com.natami.deminator.back.model;
 import java.util.*;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.natami.deminator.back.io.requests.DeminatorSettings;
 import com.natami.deminator.back.io.responses.GameData;
 import com.natami.deminator.back.io.responses.PublicPlayerData;
 
 @JsonSerialize(as=GameData.class)
 public class Game implements GameData {
-	private DeminatorSettings settings;
+	private Settings settings;
 	private final Set<Coord> mines = new HashSet<>();
 	private final Map<String, Player> players = new HashMap<>();
 	private final Map<Coord, Integer> allRevealedCells = new HashMap<>();
@@ -25,7 +24,7 @@ public class Game implements GameData {
 	}
 
 	@Override
-	public DeminatorSettings getSettings() {
+	public Settings getSettings() {
 		return this.settings;
 	}
 
@@ -47,7 +46,7 @@ public class Game implements GameData {
 
 	// // // Other Functions
 
-	public void reset(DeminatorSettings settings) {
+	public void reset(Settings settings) {
 		// Set settings
 		this.settings = settings;
 

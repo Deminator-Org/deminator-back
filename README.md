@@ -24,6 +24,6 @@ Windows: `mvnw.cmd spring-boot:run`
 Unix & Windows:
 
 ```sh
-cd test
+cd test/scenarios
 ./scenario#.sh
 ```

@@ -1,12 +1,22 @@
 package com.natami.deminator.back.io.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.natami.deminator.back.model.Coord;
 
 import java.util.Date;
-import java.util.Map;
 
 public interface SettingsResponse {
+	@JsonProperty(value="width")
+	int getWidth();
+
+	@JsonProperty(value="height")
+	int getHeight();
+
+	@JsonProperty(value="mines")
+	int getMinesCount();
+
 	@JsonProperty(value="startDatetime")
 	Date getStartDate();
+
+	@JsonProperty(value="turnDuration")
+	int getTurnDuration();
 }

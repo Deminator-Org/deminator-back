@@ -3,7 +3,7 @@
 URL='localhost:8081'
 JSON='Content-Type:application/json'
 
-echo "# Get index"
+echo "# Get initial status"
 curl -H ${JSON} -X GET ${URL}
 echo -e "\n\n"
 
@@ -83,7 +83,7 @@ echo -e "\n\n"
 sleep 1
 
 echo "# Get private end game status"
-curl -H ${JSON} -X GET ${URL}/status -d '{"id": "testt"}' || exit 1
+curl -H ${JSON} -X POST ${URL}/myStatus -d '{"id": "testt"}' || exit 1
 echo -e "\n\n"
 
 echo "### TEST END ###"

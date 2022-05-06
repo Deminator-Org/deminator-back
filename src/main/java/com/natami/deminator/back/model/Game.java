@@ -135,7 +135,7 @@ public class Game implements GameData {
 	 */
 	private int getCurrentTurn() {
 		Date now = new Date();
-		if(settings.getStartDate().after(now)) {
+		if(settings == null || settings.getStartDate().after(now)) {
 			// Game has not started yet
 			return -1;
 		}

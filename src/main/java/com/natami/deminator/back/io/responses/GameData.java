@@ -4,12 +4,13 @@ import java.util.Collection;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.natami.deminator.back.model.Settings;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.natami.deminator.back.model.Coord;
 
 public interface GameData {
 	@JsonProperty(value="settings")
-	Settings getSettings();
+	@JsonSerialize(as=SettingsResponse.class)
+	SettingsResponse getSettings();
 
 	@JsonProperty(value="players")
 	Collection<PublicPlayerData> getPlayers();

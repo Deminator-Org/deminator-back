@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.natami.deminator.back.io.requests.SettingsRequest;
 import com.natami.deminator.back.io.responses.SettingsResponse;
 

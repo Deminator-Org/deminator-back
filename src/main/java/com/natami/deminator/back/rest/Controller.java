@@ -2,6 +2,7 @@ package com.natami.deminator.back.rest;
 
 import java.util.List;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.natami.deminator.back.exceptions.InvalidActionException;
 import com.natami.deminator.back.exceptions.InvalidSettingsException;
 import com.natami.deminator.back.model.Settings;
@@ -10,6 +11,8 @@ import com.natami.deminator.back.io.responses.*;
 import com.natami.deminator.back.model.Game;
 
 import com.natami.deminator.back.model.Player;
+
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 public class Controller {
 
 	private final Game game = new Game();
+
+
 
 	// // // GET // // //
 
@@ -26,15 +31,15 @@ public class Controller {
 		return game;
 	}
 
-	@GetMapping(path = "/status", produces="application/json")
+	// // // POST // // //
+
+	@PostMapping(path="/myStatus", consumes=MediaType.APPLICATION_JSON_VALUE, produces="application/json")
 	public PlayerGameData getPlayerGameData(@RequestBody PlayerId player) {
 		return getPlayerGameData(player.getId());
 	}
 
-	// // // POST // // //
-
-	@PostMapping(path = "/gameSetup", consumes = "application/json", produces="application/json")
-	public GameData doGameSetup(@RequestBody Settings params) throws InvalidSettingsException {
+	@PostMapping(path="/gameSetup", consumes=MediaType.APPLICATION_JSON_VALUE, produces="application/json")
+	public GameData doGameSetup(@RequestBody @JsonDeserialize(as=SettingsRequest.class) Settings params) throws InvalidSettingsException {
 		// // // Check parameters
 		List<String> errors = params.validate();
 		if(!errors.isEmpty()) {
@@ -48,7 +53,7 @@ public class Controller {
 		return getPublicGameData();
 	}
 
-	@PostMapping(path = "/reveal", consumes = "application/json", produces="application/json")
+	@PostMapping(path="/reveal", consumes=MediaType.APPLICATION_JSON_VALUE, produces="application/json")
 	public PlayerGameData doReveal(@RequestBody PlayerAction action) throws InvalidActionException {
 		// // // Check context and parameters
 
@@ -66,7 +71,7 @@ public class Controller {
 		return getPlayerGameData(action.getPlayerId());
 	}
 
-	@PostMapping(path = "/setPlayer", consumes = "application/json", produces="application/json")
+	@PostMapping(path="/setPlayer", consumes=MediaType.APPLICATION_JSON_VALUE, produces="application/json")
 	public PlayerGameData setPlayer(@RequestBody NewPlayer params) {
 		Player p = game.getPlayerById(params.getId());
 		if(p == null) {

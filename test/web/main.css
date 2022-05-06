@@ -3,10 +3,40 @@ body {
 	flex-wrap: wrap;
 }
 body > div {
+	background-color: #F0F0F0;
 	border: 1px solid black;
 	margin: .5em;
 	padding: .5em;
 }
 td[colspan="2"] {
 	text-align: center;
+}
+
+#game-table td {
+	border: 2px solid #CCCCCC;
+	width: 1.5em;
+	height: 1.5em;
+	background-color: #F8F8F8;
+	text-align: center;
+	user-select: none;
+}
+#game-table.playable td {
+	border-style: outset;
+	cursor: pointer;
+}
+#game-table.opening td {
+	cursor: progress;
+}
+
+#game-table td.revealed {
+	border-style: dotted;
+	background: unset;
+	cursor: unset;
+}
+#game-table td.mine {
+	background: #FF0000;
+}
+#game-table.playable td.opening {
+	border-style: inset;
+	cursor: pointer;
 }

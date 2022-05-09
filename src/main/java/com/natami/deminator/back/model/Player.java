@@ -12,7 +12,9 @@ import java.util.Map;
 public class Player implements PublicPlayerData, SecretPlayerData {
 	private String name;
 	private final Map<Coord, Integer> revealed = new HashMap<>();
+	private boolean canPlay = false;
 	private int lastTurnPlayed = -1;
+	private int score = 0;
 
 	public Player(String playerName) {
 		this.name = playerName;
@@ -22,7 +24,12 @@ public class Player implements PublicPlayerData, SecretPlayerData {
 
 	@Override
 	public String getName() {
-		return name;
+		return this.name;
+	}
+
+	@Override
+	public int getScore() {
+		return this.score;
 	}
 
 	// // // Overrides SecretPlayerData
@@ -33,26 +40,43 @@ public class Player implements PublicPlayerData, SecretPlayerData {
 		return revealed;
 	}
 
-
-	// // // Others functions
-
-	public int getLastTurnPlayed() {
-		return lastTurnPlayed;
+	@JsonView(SecretPlayerData.class)
+	@Override
+	public boolean canPlay() {
+		return this.canPlay;
 	}
+
+
+	// // // Public functions
 
 	public void setName(String name) {
 		this.name = name;
 	}
 
-	public void reveal(Coord coord, int value) {
+
+	// // // Protected functions
+
+	protected int getLastTurnPlayed() {
+		return lastTurnPlayed;
+	}
+
+	protected void reveal(Coord coord, int value) {
 		revealed.put(coord, value);
 	}
 
-	public boolean hasRevealed(Coord coord) {
+	protected boolean hasRevealed(Coord coord) {
 		return revealed.containsKey(coord);
 	}
 
-	public void setLastTurnPlayed(int lastTurnPlayed) {
+	protected void setLastTurnPlayed(int lastTurnPlayed) {
 		this.lastTurnPlayed = lastTurnPlayed;
+	}
+
+	protected void setCanPlay(boolean canPlay) {
+		this.canPlay = canPlay;
+	}
+
+	protected void setScore(int score) {
+		this.score = score;
 	}
 }

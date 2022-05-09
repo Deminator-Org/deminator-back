@@ -22,7 +22,6 @@ public class Controller {
 	private final Game game = new Game();
 
 
-
 	// // // GET // // //
 
 	@GetMapping(path = "/", produces="application/json")
@@ -57,8 +56,8 @@ public class Controller {
 	public PlayerGameData doReveal(@RequestBody PlayerAction action) throws InvalidActionException {
 		// // // Check context and parameters
 
-		if(game.hasGameEnded()) {
-			throw new InvalidActionException("Game has ended");
+		if(!game.isGameRunning()) {
+			throw new InvalidActionException("Game is not running");
 		}
 
 		// // // Apply action

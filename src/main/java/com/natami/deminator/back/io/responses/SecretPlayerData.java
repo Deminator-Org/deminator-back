@@ -11,4 +11,7 @@ public interface SecretPlayerData {
 
 	@JsonProperty(value="revealed")
 	Map<Coord, Integer> getRevealed();
+
+	@JsonProperty(value="canPlay")
+	boolean canPlay();
 }

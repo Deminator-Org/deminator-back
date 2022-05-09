@@ -1,11 +1,10 @@
-body {
+div.flexRow {
 	display: flex;
 	flex-wrap: wrap;
 }
-body > div {
+div.block {
 	background-color: #F0F0F0;
 	border: 1px solid black;
-	margin: .5em;
 	padding: .5em;
 }
 td[colspan="2"] {
@@ -16,6 +15,8 @@ td[colspan="2"] {
 	border: 2px solid #CCCCCC;
 	width: 1.5em;
 	height: 1.5em;
+	min-width: 1.5em;
+	min-height: 1.5em;
 	background-color: #F8F8F8;
 	text-align: center;
 	user-select: none;
@@ -32,11 +33,97 @@ td[colspan="2"] {
 	border-style: dotted;
 	background: unset;
 	cursor: unset;
+	font-weight: bold;
+	font-family: Arial;
+	text-shadow: 0 0 2px #80808080;
+}
+#game-table td.byMe {
+	background: #00FF0018;
+	border-style: unset;
 }
 #game-table td.mine {
 	background: #FF0000;
 }
+#game-table td.mine.byMe {
+	background: #CCEE00;
+}
 #game-table.playable td.opening {
 	border-style: inset;
 	cursor: pointer;
+}
+
+td.revealed.v1 {
+	color: #AAAAAA;
+}
+td.revealed.v2 {
+	color: #33DD22;
+}
+td.revealed.v3 {
+	color: #88AA00;
+}
+td.revealed.v4 {
+	color: #FF8800;
+}
+td.revealed.v5 {
+	color: #FF4400;
+}
+td.revealed.v6 {
+	color: #880000;
+}
+td.revealed.v7 {
+	color: #7700AA;
+}
+td.revealed.v8 {
+	color: #000000;
+}
+
+#scores-div table {
+	border-collapse: collapse;
+}
+#scores-div td, #scores-div th {
+	border: 1px solid black;
+	padding: .25em;
+	background-color: #F8F8F8;
+}
+#scores-div th {
+	background-color: #AAAAAA;
+}
+
+#setup-table td {
+	white-space: nowrap;
+}
+
+
+body {
+	margin: 0;
+	padding: 0;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	background-color: #333333;
+}
+#settings {
+	position: absolute;
+	top: 0.5em;
+	left: 0.5em;
+	right: 18em;
+	height: 3.5em;
+}
+#game-div {
+	position: absolute;
+	top: 5.5em;
+	bottom: 0.5em;
+	left: 0.5em;
+	right: 18em;
+	overflow: auto;
+}
+#scores-div {
+	position: absolute;
+	top: 0.5em;
+	bottom: 0.5em;
+	right: 0.5em;
+	width: 16em;
+}
+#scores-div > table {
+	width: 100%;
 }

@@ -1,6 +1,7 @@
 package com.natami.deminator.back.io.responses;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,6 +19,9 @@ public interface GameData {
 	@JsonProperty(value="revealed")
 	Map<Coord, Integer> getRevealed();
 
-	@JsonProperty(value="hasGameEnded")
-	boolean hasGameEnded();
+	@JsonProperty(value="nextSync")
+	Date getNextSyncTime();
+
+	@JsonProperty(value="running")
+	boolean isGameRunning();
 }

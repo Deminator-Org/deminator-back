@@ -4,8 +4,8 @@ This project is the back end part of a multiplayer minesweeper web-app.
 
 # Dependencies
 
-Java 1.16  
-(JDK 1.16 for development)
+Java 1.17
+(JDK 1.17 for development)
 
 # Install the projet
 
@@ -18,3 +18,12 @@ Windows: `mvnw.cmd install`
 Unix: `./mvnw spring-boot:run`
 
 Windows: `mvnw.cmd spring-boot:run`
+
+# Test the project
+
+Unix & Windows:
+
+```sh
+cd test/scenarios
+./scenario#.sh
+```

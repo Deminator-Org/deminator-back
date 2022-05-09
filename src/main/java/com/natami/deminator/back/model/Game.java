@@ -1,0 +1,296 @@
+package com.natami.deminator.back.model;
+
+import java.util.*;
+
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.natami.deminator.back.io.responses.GameData;
+import com.natami.deminator.back.io.responses.PublicPlayerData;
+import com.natami.deminator.back.io.responses.RevealedCellInfo;
+
+@JsonSerialize(as=GameData.class)
+public class Game implements GameData {
+	private Settings settings;
+	private final Set<Coord> mines = new HashSet<>();
+	private final Map<String, Player> players = new HashMap<>();
+	private final Map<Coord, RevealedCellInfo> allRevealedCells = new HashMap<>();
+	private int lastSynchronizedTurn = -1;
+
+
+	// // // GameData
+
+	@Override
+	public Collection<PublicPlayerData> getPlayers() {
+		return new HashSet<>(players.values()); // cast set to required subtype
+	}
+
+	@Override
+	public Settings getSettings() {
+		return this.settings;
+	}
+
+	@Override
+	public Map<Coord, RevealedCellInfo> getRevealed() {
+		return allRevealedCells;
+	}
+
+	/**
+	 * @return next turn start dateTime
+	 * - If game has ended or settings are not initialized, returns null
+	 * - If start game time is in the future, return start game datetime
+	 */
+	@Override
+	public Date getNextSyncTime() {
+		if (settings == null || settings.getStartDate() == null || hasGameEnded()) {
+			return null;
+		}
+		Date startTime = settings.getStartDate();
+		Date now = new Date();
+		if (now.before(startTime)) {
+			return startTime;
+		}
+
+		// next turn start time
+		return new Date(startTime.getTime() + settings.getTurnDuration() * 1000 * (getCurrentTurn() + 1));
+	}
+
+	@Override
+	public boolean isGameRunning() {
+		return !(settings == null || settings.getStartDate() == null || hasGameEnded() || getCurrentTurn() < 0);
+	}
+
+	// // // Other Functions
+
+	public void reset(Settings settings) {
+		// Set settings
+		this.settings = settings;
+
+		// Reset game
+		players.clear();
+		mines.clear();
+		allRevealedCells.clear();
+
+		// Generate mines
+		Random random = new Random(settings.getSeed());
+
+		int minesCount = settings.getMinesCount();
+		int width = settings.getWidth();
+		int height = settings.getHeight();
+		while(mines.size() < minesCount) {
+			for(int i=mines.size(); i<minesCount; i++) {
+				Coord mine = new Coord(random.nextInt(width), random.nextInt(height));
+				mines.add(mine);
+			}
+		}
+
+		lastSynchronizedTurn = -1;
+	}
+
+	public void newPlayer(String playerId, String playerName, int playerColor) {
+		Player newPlayer = new Player(playerName, playerColor);
+		players.put(playerId, newPlayer);
+
+		if(isGameRunning()) {
+			newPlayer.setCanPlay(true);
+			updateStatus();
+		}
+	}
+
+	/**
+	 * Action when player request to reveal a cell
+	 * @param playerId Unique Id of the player who does the action
+	 * @param coord Cell requested to reveal
+	 * @return Error message, null if everything is ok
+	 */
+	public String open(String playerId, Coord coord) {
+		Player player = players.get(playerId);
+		if(player == null) {
+			// Player is not in the game
+			return "Player is not in the game: " + playerId;
+		}
+
+		updateStatus();
+
+		if(hasGameEnded()) {
+			return "Game has ended";
+		}
+
+		if(allRevealedCells.containsKey(coord) || player.getRevealed().containsKey(coord)) {
+			// Cell already revealed
+			return "Cell is already revealed: " + coord;
+		}
+
+		int currentTurn = getCurrentTurn();
+		if(player.getLastTurnPlayed() >= currentTurn) {
+			return "Player has already played this turn: " + currentTurn;
+		}
+
+		int clue = cascadeReveal(player, coord);
+
+		if(clue < 0) {
+			// Found a mine
+
+			// Score: Score equals to the number of still hidden cells around it +1
+			int score = 1;
+			for(Coord c : coord.around()) {
+				if(mines.contains(c) || !allRevealedCells.containsKey(c) && isCellInBounds(c)) {
+					score ++;
+				}
+			}
+
+			// Find all others players that found this mine
+			Set<Player> playersFoundMine = new HashSet<>();
+			for(Player p : players.values()) {
+				if(p.getRevealed().containsKey(coord)) {
+					playersFoundMine.add(p);
+				}
+			}
+
+			// Divide score by the number of players that found this mine
+			double beforeScore = playersFoundMine.size() <= 1 ? 0 : (score / (playersFoundMine.size() -1));
+			double afterScore = score / playersFoundMine.size();
+
+			// Give score to all players that found this mine
+			player.addScore(beforeScore); // Compensate for the player that didnt have a part of it yet
+			for(Player p : playersFoundMine) {
+				p.addScore(afterScore - beforeScore);
+			}
+
+			// Save score earned by this cell
+			player.getRevealed().put(coord, -score);
+		} else {
+			// Found a cell with a clue:
+
+			// Score: no points
+			// Can't play till next turn
+			player.setLastTurnPlayed(currentTurn);
+			player.setCanPlay(false);
+		}
+
+		return null;
+	}
+
+	public Player getPlayerById(String playerId) {
+		return players.get(playerId);
+	}
+
+	/**
+	 * Synchronises turn data if necessary
+	 */
+	public void updateStatus() {
+		int currentTurn = getCurrentTurn();
+		if(currentTurn > lastSynchronizedTurn) {
+			Set<Coord> alreadySynchronized = allRevealedCells.keySet();
+
+			for (Player player : players.values()) {
+				Map<Coord, Integer> revealed = player.getRevealed();
+				for(Coord c : revealed.keySet()) {
+					if(!alreadySynchronized.contains(c)) {
+						allRevealedCells.put(c, new RevealedCellInfo(revealed.get(c), new HashSet<>()));
+					}
+					allRevealedCells.get(c).addPlayer(player);
+				}
+
+				player.setCanPlay(true);
+			}
+
+			this.lastSynchronizedTurn = currentTurn;
+
+			// If this was the last turn, set all players to "can't play"
+			if(hasGameEnded()) {
+				// On game end, stop incrementing current turn
+				for(Player player : players.values()) {
+					player.setCanPlay(false);
+				}
+			}
+		}
+	}
+
+	// // // Private functions
+
+	/**
+	 * @return Current game turn number (calculated from settings and current date), or -1 if game isn't started yet.
+	 */
+	private int getCurrentTurn() {
+		Date now = new Date();
+		if(settings == null || settings.getStartDate().after(now)) {
+			// Game has not started yet
+			return -1;
+		}
+
+		if(hasGameEnded()) {
+			// On game end, stop incrementing current turn
+			for(Player player : players.values()) {
+				player.setCanPlay(false);
+			}
+
+			return lastSynchronizedTurn;
+		}
+
+		int msSinceGameBegan = (int)(now.getTime() - settings.getStartDate().getTime());
+		if(settings.getTurnDuration() <= 0) {
+			// 1ms per turn
+			return msSinceGameBegan;
+		}
+
+		return msSinceGameBegan / (settings.getTurnDuration()*1000);
+	}
+
+	/**
+	 * Reveal the given cell to the player. Reveal also surrounding if current cell is blank.
+	 * @param player Who does the reveal
+	 * @param coord Where to reveal
+	 * @return given coord clue
+	 */
+	private int cascadeReveal(Player player, Coord coord) {
+		if(!isCellInBounds(coord)) {
+			// Out of bounds
+			return -1;
+		}
+
+		int clue = getClue(coord);
+		if(allRevealedCells.containsKey(coord) || player.hasRevealed(coord)) {
+			// Already revealed
+			return clue;
+		}
+
+		player.reveal(coord, clue);
+
+		if(clue == 0) {
+			// If blank cell, cascade-reveal surrounding cells
+			Set<Coord> around = coord.around();
+			around.removeAll(allRevealedCells.keySet());
+			for (Coord c : around) {
+				cascadeReveal(player, c);
+			}
+		}
+
+		return clue;
+	}
+
+	/**
+	 * @param c coordinate to check
+	 * @return -1 if c is a mine; or else the number of neighbor mines (0-9)
+	 */
+	private int getClue(Coord c) {
+		if(mines.contains(c)) return -1;
+
+		Set<Coord> around = c.around();
+		around.retainAll(mines);
+		return around.size();
+	}
+
+	private boolean hasGameEnded() {
+		int revealedMinesCount = 0;
+		for (RevealedCellInfo rci : allRevealedCells.values()) {
+			if (rci.getClue() < 0) {
+				revealedMinesCount++;
+			}
+		}
+		return revealedMinesCount == mines.size();
+	}
+
+	private boolean isCellInBounds(Coord coord) {
+		return coord.getX() >= 0 && coord.getY() >= 0 && coord.getX() < settings.getWidth() && coord.getY() < settings.getHeight();
+	}
+
+}

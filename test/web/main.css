@@ -1,0 +1,143 @@
+div.flexRow {
+	display: flex;
+	flex-wrap: wrap;
+}
+div.block {
+	background-color: #F0F0F0;
+	border: 1px solid black;
+	padding: .5em;
+}
+td[colspan="2"] {
+	text-align: center;
+}
+
+#game-table .cell {
+	border: 2px solid #CCCCCC;
+	width: 1.5em;
+	height: 1.5em;
+	min-width: 1.5em;
+	min-height: 1.5em;
+	background-color: #F8F8F8;
+	text-align: center;
+	user-select: none;
+}
+#game-table.playable .cell {
+	border-style: outset;
+	cursor: pointer;
+}
+#game-table.opening .cell {
+	cursor: progress;
+}
+
+#game-table .cell.revealed {
+	border-style: dotted;
+	background: unset;
+	cursor: unset;
+	font-weight: bold;
+	font-family: Arial;
+	text-shadow: 0 0 2px #80808080;
+}
+#game-table .cell.revealed.byMe {
+	border-style: unset;
+}
+#game-table .cell.revealed.byMe:not(.mine) {
+	background: #00FF0010;
+}
+#game-table .cell.mine {
+	position: relative;
+}
+#game-table .cell .mineValue {
+	position: absolute;
+	display: block;
+	top: 10%;
+	bottom: 10%;
+	left: 10%;
+	right: 10%;
+	background-image: url('imgs/chest.png');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: bottom;
+	color: #FFFF40;
+	text-shadow: 0 0 .5em #000000;
+	line-height: 0;
+}
+#game-table.playable td.opening {
+	border-style: inset;
+	cursor: pointer;
+}
+
+#game-table .cell.revealed.v1 {
+	color: #AAAAAA;
+}
+#game-table .cell.revealed.v2 {
+	color: #33DD22;
+}
+#game-table .cell.revealed.v3 {
+	color: #88AA00;
+}
+#game-table .cell.revealed.v4 {
+	color: #FF8800;
+}
+#game-table .cell.revealed.v5 {
+	color: #FF4400;
+}
+#game-table .cell.revealed.v6 {
+	color: #880000;
+}
+#game-table .cell.revealed.v7 {
+	color: #7700AA;
+}
+#game-table .cell.revealed.v8 {
+	color: #000000;
+}
+
+#scores-div table {
+	border-collapse: collapse;
+}
+#scores-div td, #scores-div th {
+	border: 1px solid black;
+	padding: .25em;
+	background-color: #F8F8F8;
+}
+#scores-div th {
+	background-color: #AAAAAA;
+}
+
+#setup-table td {
+	white-space: nowrap;
+}
+
+
+body {
+	margin: 0;
+	padding: 0;
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	background-color: #333333;
+}
+#settings {
+	position: absolute;
+	top: 0.5em;
+	left: 0.5em;
+	right: 18em;
+	height: 3.5em;
+}
+#game-div {
+	position: absolute;
+	top: 5.5em;
+	bottom: 0.5em;
+	left: 0.5em;
+	right: 18em;
+	overflow: auto;
+}
+#scores-div {
+	position: absolute;
+	top: 0.5em;
+	bottom: 0.5em;
+	right: 0.5em;
+	width: 16em;
+}
+#scores-div > table {
+	width: 100%;
+}

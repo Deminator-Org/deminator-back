@@ -132,12 +132,31 @@ public class Game implements GameData {
 			// Score: Score equals to the number of still hidden cells around it +1
 			int score = 1;
 			for(Coord c : coord.around()) {
-				if(!allRevealedCells.containsKey(c) && isCellInBounds(c)) {
+				if(mines.contains(c) || !allRevealedCells.containsKey(c) && isCellInBounds(c)) {
 					score ++;
 				}
 			}
-			player.setScore(player.getScore() + score);
-			// Can still play
+
+			// Find all others players that found this mine
+			Set<Player> playersFoundMine = new HashSet<>();
+			for(Player p : players.values()) {
+				if(p.getRevealed().containsKey(coord)) {
+					playersFoundMine.add(p);
+				}
+			}
+
+			// Divide score by the number of players that found this mine
+			double beforeScore = playersFoundMine.size() <= 1 ? 0 : (score / (playersFoundMine.size() -1));
+			double afterScore = score / playersFoundMine.size();
+
+			// Give score to all players that found this mine
+			player.addScore(beforeScore); // Compensate for the player that didnt have a part of it yet
+			for(Player p : playersFoundMine) {
+				p.addScore(afterScore - beforeScore);
+			}
+
+			// Save score earned by this cell
+			player.getRevealed().put(coord, -score);
 		} else {
 			// Found a cell with a clue:
 

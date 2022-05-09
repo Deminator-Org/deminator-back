@@ -38,18 +38,28 @@ td[colspan="2"] {
 	text-shadow: 0 0 2px #80808080;
 }
 #game-table .cell.revealed.byMe {
-	background: #00FF0018;
 	border-style: unset;
 }
-#game-table .cell.mine::after {
-	content: " ";
-	width: 100%;
-	height: 100%;
-	background-image: url('https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fa4.mzstatic.com%2Fus%2Fr1000%2F092%2FPurple%2Fv4%2Ffa%2F52%2Fdf%2Ffa52df94-5488-2d68-6493-376eece87b0b%2Ficon.175x175-75.png&f=1&nofb=1');
+#game-table .cell.revealed.byMe:not(.mine) {
+	background: #00FF0010;
+}
+#game-table .cell.mine {
+	position: relative;
+}
+#game-table .cell .mineValue {
+	position: absolute;
+	display: block;
+	top: 10%;
+	bottom: 10%;
+	left: 10%;
+	right: 10%;
+	background-image: url('imgs/chest.png');
 	background-size: contain;
 	background-repeat: no-repeat;
-	background-position: center;
-	display: block;
+	background-position: bottom;
+	color: #FFFF40;
+	text-shadow: 0 0 .5em #000000;
+	line-height: 0;
 }
 #game-table.playable td.opening {
 	border-style: inset;

@@ -15,7 +15,7 @@ public class Player implements PublicPlayerData, SecretPlayerData {
 	private final Map<Coord, Integer> revealed = new HashMap<>();
 	private boolean canPlay = false;
 	private int lastTurnPlayed = -1;
-	private int score = 0;
+	private double score = 0;
 
 	public Player(String name, int color) {
 		this.name = name;
@@ -31,7 +31,7 @@ public class Player implements PublicPlayerData, SecretPlayerData {
 
 	@Override
 	public int getScore() {
-		return this.score;
+		return (int)(this.score);
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class Player implements PublicPlayerData, SecretPlayerData {
 		this.canPlay = canPlay;
 	}
 
-	protected void setScore(int score) {
-		this.score = score;
+	protected void addScore(double add) {
+		this.score += add;
 	}
 }

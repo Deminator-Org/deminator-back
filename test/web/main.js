@@ -200,7 +200,7 @@ function onPageLoad() {
 		 *      color: <int 0..359>
 		 *      score: <int>
 		 *  revealed: {"x,y": {...}}
-		 *      clue: <int -1/1..8>
+		 *      clue: <int: negative=mine value, positive=clue>
 		 *      who: ["playerName1", "playerName2", ...]
 		 *  hasGameEnded: boolean
 		 */
@@ -263,6 +263,7 @@ function onPageLoad() {
 				if(clue < 0) {
 					cell.addClass('mine')
 					cell.css('background', makeRevealedCellColor(gameData.revealed[cellId].who, gameData.players))
+					cell.append('<div class="mineValue">' + (-clue) + '</div>')
 				} else if(clue > 0) {
 					cell.text(clue).addClass('v' + clue)
 				}

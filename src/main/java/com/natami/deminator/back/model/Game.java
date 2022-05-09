@@ -5,13 +5,14 @@ import java.util.*;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.natami.deminator.back.io.responses.GameData;
 import com.natami.deminator.back.io.responses.PublicPlayerData;
+import com.natami.deminator.back.io.responses.RevealedCellInfo;
 
 @JsonSerialize(as=GameData.class)
 public class Game implements GameData {
 	private Settings settings;
 	private final Set<Coord> mines = new HashSet<>();
 	private final Map<String, Player> players = new HashMap<>();
-	private final Map<Coord, Integer> allRevealedCells = new HashMap<>();
+	private final Map<Coord, RevealedCellInfo> allRevealedCells = new HashMap<>();
 	private int lastSynchronizedTurn = -1;
 
 
@@ -28,7 +29,7 @@ public class Game implements GameData {
 	}
 
 	@Override
-	public Map<Coord, Integer> getRevealed() {
+	public Map<Coord, RevealedCellInfo> getRevealed() {
 		return allRevealedCells;
 	}
 
@@ -84,17 +85,8 @@ public class Game implements GameData {
 		lastSynchronizedTurn = -1;
 	}
 
-	public Player whoRevealed(Coord coord) {
-		for(Player player : players.values()) {
-			if(player.hasRevealed(coord)) {
-				return player;
-			}
-		}
-		return null;
-	}
-
-	public void newPlayer(String playerId, String playerName) {
-		Player newPlayer = new Player(playerName);
+	public void newPlayer(String playerId, String playerName, int playerColor) {
+		Player newPlayer = new Player(playerName, playerColor);
 		players.put(playerId, newPlayer);
 
 		if(isGameRunning()) {
@@ -174,7 +166,9 @@ public class Game implements GameData {
 				Map<Coord, Integer> revealed = player.getRevealed();
 				for(Coord c : revealed.keySet()) {
 					if(!alreadySynchronized.contains(c)) {
-						allRevealedCells.put(c, revealed.get(c));
+						allRevealedCells.put(c, new RevealedCellInfo(revealed.get(c), new HashSet<>()));
+					} else {
+						allRevealedCells.get(c).addPlayer(player);
 					}
 				}
 
@@ -269,8 +263,8 @@ public class Game implements GameData {
 
 	private boolean hasGameEnded() {
 		int revealedMinesCount = 0;
-		for (Integer value : allRevealedCells.values()) {
-			if (value < 0) {
+		for (RevealedCellInfo rci : allRevealedCells.values()) {
+			if (rci.getClue() < 0) {
 				revealedMinesCount++;
 			}
 		}
@@ -280,4 +274,5 @@ public class Game implements GameData {
 	private boolean isCellInBounds(Coord coord) {
 		return coord.getX() >= 0 && coord.getY() >= 0 && coord.getX() < settings.getWidth() && coord.getY() < settings.getHeight();
 	}
+
 }

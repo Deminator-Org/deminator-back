@@ -1,8 +1,6 @@
 package com.natami.deminator.back.model;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import com.natami.deminator.back.io.requests.SettingsRequest;
 import com.natami.deminator.back.io.responses.SettingsResponse;
@@ -65,8 +63,8 @@ public class Settings implements SettingsRequest, SettingsResponse {
 
 	// // // Other Functions
 
-	public List<String> validate() {
-		List<String> errors = new ArrayList<>();
+	public Set<String> validate() {
+		Set<String> errors = new HashSet<>();
 
 		if(width <= 0) {
 			errors.add("Width should be grater than or equal to 1");

@@ -11,13 +11,15 @@ import java.util.Map;
 @JsonSerialize(as=PublicPlayerData.class)
 public class Player implements PublicPlayerData, SecretPlayerData {
 	private String name;
+	private int color; // Hue
 	private final Map<Coord, Integer> revealed = new HashMap<>();
 	private boolean canPlay = false;
 	private int lastTurnPlayed = -1;
 	private int score = 0;
 
-	public Player(String playerName) {
-		this.name = playerName;
+	public Player(String name, int color) {
+		this.name = name;
+		this.color = color;
 	}
 
 	// // // Overrides PublicPlayerData
@@ -30,6 +32,11 @@ public class Player implements PublicPlayerData, SecretPlayerData {
 	@Override
 	public int getScore() {
 		return this.score;
+	}
+
+	@Override
+	public int getColor() {
+		return this.color;
 	}
 
 	// // // Overrides SecretPlayerData
@@ -51,6 +58,10 @@ public class Player implements PublicPlayerData, SecretPlayerData {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public void setColor(int color) {
+		this.color = color;
 	}
 
 

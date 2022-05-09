@@ -137,10 +137,11 @@ function onPageLoad() {
 				userId = GUIr.i_name.val()
 			}
 
-			// {"id": "testt", "name":"testt"}
+			// {"id": "testt", "name":"testt", "color": 359}
 			const payload = JSON.stringify({
 				id: userId,
 				name: GUIr.i_name.val(),
+				color: Math.abs(userId.hash())%360,
 			})
 
 			const url = GUI.settings.i_url.val() + '/setPlayer';
@@ -181,7 +182,18 @@ function onPageLoad() {
 	let lastReceivedSettings = {}
 	let nextSyncCall = null
 	function onReceiveGameData(data, playerData) {
-		console.debug('Received GameData', data) // {settings: {...}, players: [{name: }, ...], revealed: {coord: clue, ...}, hasGameEnded: boolean}
+		/* Data:
+		 *  settings: {...}
+		 *  players: [{...}]
+		 *      name: <str>
+		 *      color: <int 0..359>
+		 *      score: <int>
+		 *  revealed: {"x,y": {...}}
+		 *      clue: <int -1/1..8>
+		 *      who: ["playerName1", "playerName2", ...]
+		 *  hasGameEnded: boolean
+		 */
+		console.debug('Received GameData', data)
 
 		if(data.settings) {
 			GUI.game.div.show();
@@ -266,9 +278,8 @@ function onPageLoad() {
 				const pct = (100*player.score/maxScore)|0
 				const scoreTd = $(`<td>${player.score}</td>`);
 				// Append to scoreTd a progress bar filled at pct% as background style
-				scoreTd.css('background-image', `linear-gradient(to right, #FF0 ${pct}%, #FF00 ${pct+1}%)`)
+				scoreTd.css('background-image', `linear-gradient(to right, hsla(${player.color}, 75%, 50%, 1) ${pct}%, hsla(${player.color}, 75%, 50%, 0) ${pct+1}%)`)
 				tr.append(scoreTd)
-
 
 				GUI.scores.table.append(tr)
 			}

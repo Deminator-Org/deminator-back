@@ -6,6 +6,9 @@ public interface PublicPlayerData {
 	@JsonProperty(value="name")
 	String getName();
 
+	@JsonProperty(value="color")
+	int getColor();
+
 	@JsonProperty(value="score")
 	int getScore();
 }

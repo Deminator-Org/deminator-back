@@ -17,7 +17,7 @@ public interface GameData {
 	Collection<PublicPlayerData> getPlayers();
 
 	@JsonProperty(value="revealed")
-	Map<Coord, Integer> getRevealed();
+	Map<Coord, RevealedCellInfo> getRevealed();
 
 	@JsonProperty(value="nextSync")
 	Date getNextSyncTime();

@@ -1,6 +1,7 @@
 package com.natami.deminator.back.rest;
 
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.natami.deminator.back.exceptions.InvalidActionException;
@@ -40,7 +41,7 @@ public class Controller {
 	@PostMapping(path="/gameSetup", consumes=MediaType.APPLICATION_JSON_VALUE, produces="application/json")
 	public GameData doGameSetup(@RequestBody @JsonDeserialize(as=SettingsRequest.class) Settings params) throws InvalidSettingsException {
 		// // // Check parameters
-		List<String> errors = params.validate();
+		Set<String> errors = params.validate();
 		if(!errors.isEmpty()) {
 			throw new InvalidSettingsException(errors);
 		}
@@ -71,12 +72,28 @@ public class Controller {
 	}
 
 	@PostMapping(path="/setPlayer", consumes=MediaType.APPLICATION_JSON_VALUE, produces="application/json")
-	public PlayerGameData setPlayer(@RequestBody NewPlayer params) {
+	public PlayerGameData setPlayer(@RequestBody NewPlayer params) throws InvalidSettingsException {
+		Set<String> errors = params.validate();
+
 		Player p = game.getPlayerById(params.getId());
+
+		// Check if any other player already have the prompted display name
+		if(game.getPlayers().stream().anyMatch(p2 -> p2.getName().equals(params.getName()))
+			&& (p == null || !p.getName().equals(params.getName()))) {
+			errors.add("Another player already have this display name");
+		}
+
+		// Return errors if any
+		if(errors.size() > 0) {
+			throw new InvalidSettingsException(errors);
+		}
+
+		// Set the player
 		if(p == null) {
-			game.newPlayer(params.getId(), params.getName());
+			game.newPlayer(params.getId(), params.getName(), params.getColor());
 		} else {
 			p.setName(params.getName());
+			p.setColor(params.getColor());
 		}
 
 		return getPlayerGameData(params.getId());

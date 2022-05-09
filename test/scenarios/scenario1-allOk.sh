@@ -10,7 +10,7 @@ echo -e "\n\n"
 sleep 1
 
 echo "# Create new game"
-curl -H ${JSON} -X POST ${URL}/gameSetup -d '{"width":10, "height":11, "mines":12, "turnDuration": 10, "startTimeout": 0,"seed":42}'
+curl -H ${JSON} -X POST ${URL}/gameSetup -d '{"width":10, "height":11, "mines":12, "turnDuration":10, "startTimeout":0,"seed":42}'
 echo -e "\n\n"
 
 # For this seed, mines are: ["0,4","0,8","7,7","9,6","2,7","0,6","6,9","3,8","8,5","3,9","5,2","6,0"]
@@ -18,7 +18,7 @@ echo -e "\n\n"
 sleep 1
 
 echo "# Register player"
-curl -H ${JSON} -X POST ${URL}/setPlayer -d '{"id": "testt", "name":"testt"}'
+curl -H ${JSON} -X POST ${URL}/setPlayer -d '{"id": "testt", "name":"testt", "color":0}'
 echo -e "\n\n"
 
 sleep 1
@@ -30,7 +30,7 @@ echo -e "\n\n"
 sleep 1
 
 echo "# Rename the player"
-curl -H ${JSON} -X POST ${URL}/setPlayer -d '{"id": "testt", "name":"testtttt"}'
+curl -H ${JSON} -X POST ${URL}/setPlayer -d '{"id": "testt", "name":"testtttt", "color":180}'
 echo -e "\n\n"
 
 # Wait for next turn before to play

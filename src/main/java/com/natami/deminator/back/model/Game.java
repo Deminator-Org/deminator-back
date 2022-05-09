@@ -1,7 +1,6 @@
 package com.natami.deminator.back.model;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.natami.deminator.back.io.responses.GameData;
@@ -134,8 +133,24 @@ public class Game implements GameData {
 		}
 
 		int clue = cascadeReveal(player, coord);
-		if(clue >= 0) {
-			// Can't play till next turn if found a clue
+
+		if(clue < 0) {
+			// Found a mine
+
+			// Score: Score equals to the number of still hidden cells around it +1
+			int score = 1;
+			for(Coord c : coord.around()) {
+				if(!allRevealedCells.containsKey(c) && isCellInBounds(c)) {
+					score ++;
+				}
+			}
+			player.setScore(player.getScore() + score);
+			// Can still play
+		} else {
+			// Found a cell with a clue:
+
+			// Score: no points
+			// Can't play till next turn
 			player.setLastTurnPlayed(currentTurn);
 			player.setCanPlay(false);
 		}
@@ -147,8 +162,35 @@ public class Game implements GameData {
 		return players.get(playerId);
 	}
 
+	/**
+	 * Synchronises turn data if necessary
+	 */
 	public void updateStatus() {
-		getCurrentTurn();
+		int currentTurn = getCurrentTurn();
+		if(currentTurn > lastSynchronizedTurn) {
+			Set<Coord> alreadySynchronized = allRevealedCells.keySet();
+
+			for (Player player : players.values()) {
+				Map<Coord, Integer> revealed = player.getRevealed();
+				for(Coord c : revealed.keySet()) {
+					if(!alreadySynchronized.contains(c)) {
+						allRevealedCells.put(c, revealed.get(c));
+					}
+				}
+
+				player.setCanPlay(true);
+			}
+
+			this.lastSynchronizedTurn = currentTurn;
+
+			// If this was the last turn, set all players to "can't play"
+			if(hasGameEnded()) {
+				// On game end, stop incrementing current turn
+				for(Player player : players.values()) {
+					player.setCanPlay(false);
+				}
+			}
+		}
 	}
 
 	// // // Private functions
@@ -178,35 +220,7 @@ public class Game implements GameData {
 			return msSinceGameBegan;
 		}
 
-		int currentTurn = msSinceGameBegan / (settings.getTurnDuration()*1000);
-
-		// Synchronize turn
-		if(currentTurn > lastSynchronizedTurn) {
-			Set<Coord> alreadySynchronized = allRevealedCells.keySet();
-
-			for (Player player : players.values()) {
-				Map<Coord, Integer> revealed = player.getRevealed();
-				for(Coord c : revealed.keySet()) {
-					if(!alreadySynchronized.contains(c)) {
-						allRevealedCells.put(c, revealed.get(c));
-					}
-				}
-
-				player.setCanPlay(true);
-			}
-
-			this.lastSynchronizedTurn = currentTurn;
-
-			// If this was the last turn, set all players to "can't play"
-			if(hasGameEnded()) {
-				// On game end, stop incrementing current turn
-				for(Player player : players.values()) {
-					player.setCanPlay(false);
-				}
-			}
-		}
-
-		return currentTurn;
+		return msSinceGameBegan / (settings.getTurnDuration()*1000);
 	}
 
 	/**
@@ -216,7 +230,7 @@ public class Game implements GameData {
 	 * @return given coord clue
 	 */
 	private int cascadeReveal(Player player, Coord coord) {
-		if(coord.getX() < 0 || coord.getY() < 0 || coord.getX() >= settings.getWidth() || coord.getY() >= settings.getHeight()) {
+		if(!isCellInBounds(coord)) {
 			// Out of bounds
 			return -1;
 		}
@@ -229,24 +243,6 @@ public class Game implements GameData {
 
 		player.reveal(coord, clue);
 
-		// Compute Score
-		if(clue < 0) {
-			// Mine: score equals to the sum of the clues of the hidden surrounding cells, +1
-			int score = 1;
-			for(Coord c : coord.around()) {
-				if(!mines.contains(c) && !allRevealedCells.containsKey(c) && !player.hasRevealed(c)) {
-					int nClue = getClue(c);
-					if(nClue < 0) {
-						score += 9;
-					}
-					score += nClue;
-				}
-			}
-			player.setScore(player.getScore() + score);
-		} else {
-			// Clue: score is the clue
-			player.setScore(player.getScore() + clue);
-		}
 		if(clue == 0) {
 			// If blank cell, cascade-reveal surrounding cells
 			Set<Coord> around = coord.around();
@@ -279,5 +275,9 @@ public class Game implements GameData {
 			}
 		}
 		return revealedMinesCount == mines.size();
+	}
+
+	private boolean isCellInBounds(Coord coord) {
+		return coord.getX() >= 0 && coord.getY() >= 0 && coord.getX() < settings.getWidth() && coord.getY() < settings.getHeight();
 	}
 }

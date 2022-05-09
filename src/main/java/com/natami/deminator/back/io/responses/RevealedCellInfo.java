@@ -1,7 +1,6 @@
 package com.natami.deminator.back.io.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.natami.deminator.back.model.Coord;
 import com.natami.deminator.back.model.Player;
 
 import java.util.Collection;

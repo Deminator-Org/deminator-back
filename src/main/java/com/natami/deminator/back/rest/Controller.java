@@ -1,6 +1,5 @@
 package com.natami.deminator.back.rest;
 
-import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

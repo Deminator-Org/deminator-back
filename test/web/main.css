@@ -11,7 +11,7 @@ td[colspan="2"] {
 	text-align: center;
 }
 
-#game-table td {
+#game-table .cell {
 	border: 2px solid #CCCCCC;
 	width: 1.5em;
 	height: 1.5em;
@@ -21,15 +21,15 @@ td[colspan="2"] {
 	text-align: center;
 	user-select: none;
 }
-#game-table.playable td {
+#game-table.playable .cell {
 	border-style: outset;
 	cursor: pointer;
 }
-#game-table.opening td {
+#game-table.opening .cell {
 	cursor: progress;
 }
 
-#game-table td.revealed {
+#game-table .cell.revealed {
 	border-style: dotted;
 	background: unset;
 	cursor: unset;
@@ -37,43 +37,47 @@ td[colspan="2"] {
 	font-family: Arial;
 	text-shadow: 0 0 2px #80808080;
 }
-#game-table td.byMe {
+#game-table .cell.revealed.byMe {
 	background: #00FF0018;
 	border-style: unset;
 }
-#game-table td.mine {
-	background: #FF0000;
-}
-#game-table td.mine.byMe {
-	background: #CCEE00;
+#game-table .cell.mine::after {
+	content: " ";
+	width: 100%;
+	height: 100%;
+	background-image: url('https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fa4.mzstatic.com%2Fus%2Fr1000%2F092%2FPurple%2Fv4%2Ffa%2F52%2Fdf%2Ffa52df94-5488-2d68-6493-376eece87b0b%2Ficon.175x175-75.png&f=1&nofb=1');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+	display: block;
 }
 #game-table.playable td.opening {
 	border-style: inset;
 	cursor: pointer;
 }
 
-td.revealed.v1 {
+#game-table .cell.revealed.v1 {
 	color: #AAAAAA;
 }
-td.revealed.v2 {
+#game-table .cell.revealed.v2 {
 	color: #33DD22;
 }
-td.revealed.v3 {
+#game-table .cell.revealed.v3 {
 	color: #88AA00;
 }
-td.revealed.v4 {
+#game-table .cell.revealed.v4 {
 	color: #FF8800;
 }
-td.revealed.v5 {
+#game-table .cell.revealed.v5 {
 	color: #FF4400;
 }
-td.revealed.v6 {
+#game-table .cell.revealed.v6 {
 	color: #880000;
 }
-td.revealed.v7 {
+#game-table .cell.revealed.v7 {
 	color: #7700AA;
 }
-td.revealed.v8 {
+#game-table .cell.revealed.v8 {
 	color: #000000;
 }
 

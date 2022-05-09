@@ -36,9 +36,16 @@ function onPageLoad() {
 	GUI.game.div.hide();
 	GUI.scores.div.hide();
 
+	function getServerURL() {
+		let url = GUI.settings.i_url.val()
+		if(!url.includes('://')) {
+			return 'http://' + url;
+		}
+		return url;
+	}
 	function sendRefreshStatus() {
 		// {"id": "testt"}
-		const url = GUI.settings.i_url.val() + '/myStatus';
+		const url = getServerURL() + '/myStatus';
 		const payload = JSON.stringify({id: userId});
 		$.ajax(url, {
 			type: "POST",
@@ -55,7 +62,7 @@ function onPageLoad() {
 		const GUIs = GUI.settings
 
 		function tryConnect() {
-			const url = GUI.settings.i_url.val();
+			const url = getServerURL();
 			$.get(url, onReceiveGameData)
 			.fail(onReceiveError)
 		}
@@ -73,7 +80,10 @@ function onPageLoad() {
 				modal: true,
 				width: 'auto',
 				buttons: {
-					'Start !': sendSetup,
+					'Start !': () => {
+						sendSetup()
+						GUIs.div.dialog('close')
+					},
 					Cancel: () => GUIs.div.dialog('close'),
 				}
 			});
@@ -109,7 +119,7 @@ function onPageLoad() {
 				seed: seed|0,
 			})
 
-			const url = GUI.settings.i_url.val() + '/gameSetup';
+			const url = getServerURL() + '/gameSetup';
 			$.ajax(url, {
 				type: "POST",
 				data: payload,
@@ -144,11 +154,12 @@ function onPageLoad() {
 				color: Math.abs(userId.hash())%360,
 			})
 
-			const url = GUI.settings.i_url.val() + '/setPlayer';
+			const url = getServerURL() + '/setPlayer';
 			$.ajax(url, {
 				type: "POST",
 				data: payload,
 				success: onReceivePlayerGameData,
+				error: onReceiveError,
 				contentType: 'application/json',
 				dataType: 'json'
 			})
@@ -181,7 +192,7 @@ function onPageLoad() {
 	// Prepare response listeners
 	let lastReceivedSettings = {}
 	let nextSyncCall = null
-	function onReceiveGameData(data, playerData) {
+	function onReceiveGameData(gameData, playerData) {
 		/* Data:
 		 *  settings: {...}
 		 *  players: [{...}]
@@ -193,45 +204,45 @@ function onPageLoad() {
 		 *      who: ["playerName1", "playerName2", ...]
 		 *  hasGameEnded: boolean
 		 */
-		console.debug('Received GameData', data)
+		console.debug('Received GameData', JSON.parse(JSON.stringify({gameData, playerData})))
 
-		if(data.settings) {
+		if(gameData.settings) {
 			GUI.game.div.show();
 
 			// update new settings to UI
-			if(data.settings.width !== lastReceivedSettings.width) {
-				GUI.setup.i_width.val(data.settings.width)
+			if(gameData.settings.width !== lastReceivedSettings.width) {
+				GUI.setup.i_width.val(gameData.settings.width)
 			}
-			if(data.settings.height !== lastReceivedSettings.height) {
-				GUI.setup.i_height.val(data.settings.height)
+			if(gameData.settings.height !== lastReceivedSettings.height) {
+				GUI.setup.i_height.val(gameData.settings.height)
 			}
-			if(data.settings.mines !== lastReceivedSettings.mines) {
-				GUI.setup.i_mines.val(Math.round(data.settings.mines / (data.settings.width * data.settings.height) * 100))
+			if(gameData.settings.mines !== lastReceivedSettings.mines) {
+				GUI.setup.i_mines.val(Math.round(gameData.settings.mines / (gameData.settings.width * gameData.settings.height) * 100))
 			}
-			if(data.settings.turnDuration !== lastReceivedSettings.turnDuration) {
-				GUI.setup.i_turn.val(data.settings.turnDuration)
+			if(gameData.settings.turnDuration !== lastReceivedSettings.turnDuration) {
+				GUI.setup.i_turn.val(gameData.settings.turnDuration)
 			}
 
 			// TODO: Initiate the grid if settings.startDate changed
-			if(data.settings.startDatetime !== lastReceivedSettings.startDatetime) {
+			if(gameData.settings.startDatetime !== lastReceivedSettings.startDatetime) {
 				GUI.game.table.empty()
-				for(let y = 0; y < data.settings.height; y++) {
+				for(let y = 0; y < gameData.settings.height; y++) {
 					const tr = $('<tr>')
 					GUI.game.table.append(tr)
-					for(let x = 0; x < data.settings.width; x++) {
+					for(let x = 0; x < gameData.settings.width; x++) {
 						tr.append($(`<td id="${x},${y}" class="cell"></td>`))
 					}
 				}
 			}
 
-			lastReceivedSettings = data.settings
+			lastReceivedSettings = gameData.settings
 		} else {
 			GUI.game.div.hide();
 		}
 
-		if(data.revealed) {
+		if(gameData.revealed) {
 			// Clear all cells
-			const allCells = GUI.game.table.find('.cell').text('').removeClass('byMe').removeClass('revealed').removeClass('mine')
+			const allCells = GUI.game.table.find('.cell').text('').removeClass('revealed').removeClass('mine').css('background', '')
 			for(let i=1; i<=8; i++) {
 				allCells.removeClass('v'+i)
 			}
@@ -239,16 +250,19 @@ function onPageLoad() {
 			if(playerData && playerData.revealed) {
 				for(const cellId of Object.keys(playerData.revealed)) {
 					$(`[id="${cellId}"]`).addClass('byMe')
-					data.revealed[cellId] = playerData.revealed[cellId]
+					if(!(cellId in gameData.revealed)) {
+						gameData.revealed[cellId] = {clue: playerData.revealed[cellId], who: [playerData.name]}
+					}
 				}
 			}
 
-			for(const cellId in data.revealed) {
-				const clue = data.revealed[cellId]
+			for(const cellId in gameData.revealed) {
+				const clue = gameData.revealed[cellId].clue
 				const cell = $(`[id="${cellId}"]`)
 				cell.addClass('revealed')
 				if(clue < 0) {
 					cell.addClass('mine')
+					cell.css('background', makeRevealedCellColor(gameData.revealed[cellId].who, gameData.players))
 				} else if(clue > 0) {
 					cell.text(clue).addClass('v' + clue)
 				}
@@ -256,16 +270,16 @@ function onPageLoad() {
 		}
 
 		// Append scores, sorted by score descending, with first column is a Rank
-		if(data.players && data.players.length > 0) {
+		if(gameData.players && gameData.players.length > 0) {
 			GUI.scores.div.show();
 
-			data.players.sort((a, b) => b.score - a.score)
+			gameData.players.sort((a, b) => b.score - a.score)
 			let rankedScore = Infinity
 			let rank = 0
-			const maxScore = data.players[0].score || 1
+			const maxScore = gameData.players[0].score || 1
 
 			GUI.scores.table.empty();
-			for(const player of data.players) {
+			for(const player of gameData.players) {
 				if(player.score < rankedScore) {
 					rank++;
 					rankedScore = player.score;
@@ -290,10 +304,10 @@ function onPageLoad() {
 		if(nextSyncCall) {
 			clearTimeout(nextSyncCall)
 		}
-		if(data.nextSync) {
+		if(gameData.nextSync) {
 			// Update countdown until start
-			setCountdown(new Date(data.nextSync))
-			nextSyncCall = setTimeout(sendRefreshStatus, new Date(data.nextSync) - Date.now())
+			setCountdown(new Date(gameData.nextSync))
+			nextSyncCall = setTimeout(sendRefreshStatus, new Date(gameData.nextSync) - Date.now())
 		}
 	}
 
@@ -344,9 +358,8 @@ function onPageLoad() {
 			id: userId,
 			coord: target.id,
 		})
-		console.log(payload)
 
-		const url = GUI.settings.i_url.val() + '/reveal';
+		const url = getServerURL() + '/reveal';
 		$.ajax(url, {
 			type: "POST",
 			data: payload,
@@ -406,4 +419,31 @@ function validateInput(input) {
 		return false;
 	}
 	return true;
+}
+
+/**
+ * Return a css background image for cells, such as background is stripped with relatedPlayer's colors
+ * @param {*} relatedPlayerList
+ * @param {*} fullPlayerList
+ * @return {string} CSS background image
+ */
+function makeRevealedCellColor(relatedPlayerList, fullPlayerList) {
+	const nbPlayers = relatedPlayerList.length
+	const stripeSize = 100 / nbPlayers
+
+
+	// fullPlayerList ([{name: <str>, color: <str>}]) to map ({<name>: <color>})
+	const colorsMap = {}
+	for(const player of fullPlayerList) {
+		colorsMap[player.name] = player.color
+	}
+
+	let stripes = []
+	for(let i=0; i<nbPlayers; i++) {
+		const color = colorsMap[relatedPlayerList[i]]
+		stripes.push(`hsla(${color}, 75%, 50%, .25) ${(stripeSize*i).toFixed(2)}%`)
+		stripes.push(`hsla(${color}, 75%, 50%, .25) ${(stripeSize*(i+1)).toFixed(2)}%`)
+	}
+
+	return 'linear-gradient(45deg,' + stripes.join(',') + ')'
 }

@@ -167,9 +167,8 @@ public class Game implements GameData {
 				for(Coord c : revealed.keySet()) {
 					if(!alreadySynchronized.contains(c)) {
 						allRevealedCells.put(c, new RevealedCellInfo(revealed.get(c), new HashSet<>()));
-					} else {
-						allRevealedCells.get(c).addPlayer(player);
 					}
+					allRevealedCells.get(c).addPlayer(player);
 				}
 
 				player.setCanPlay(true);

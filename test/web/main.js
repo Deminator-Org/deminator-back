@@ -192,6 +192,7 @@ function onPageLoad() {
 	// Prepare response listeners
 	let lastReceivedSettings = {}
 	let nextSyncCall = null
+	let gameStarted = false;
 	function onReceiveGameData(gameData, playerData) {
 		/* Data:
 		 *  settings: {...}
@@ -202,7 +203,8 @@ function onPageLoad() {
 		 *  revealed: {"x,y": {...}}
 		 *      clue: <int: negative=mine value, positive=clue>
 		 *      who: ["playerName1", "playerName2", ...]
-		 *  hasGameEnded: boolean
+		 *  nextSync: <iso date>
+		 *  running: <boolean>
 		 */
 		console.debug('Received GameData', JSON.parse(JSON.stringify({gameData, playerData})))
 
@@ -263,15 +265,22 @@ function onPageLoad() {
 				if(clue < 0) {
 					cell.addClass('mine')
 					cell.css('background', makeRevealedCellColor(gameData.revealed[cellId].who, gameData.players))
-					cell.append('<div class="mineValue">' + (-clue) + '</div>')
+					cell.append($('<div class="mineValue">' + (-clue) + '</div>'))
 				} else if(clue > 0) {
 					cell.text(clue).addClass('v' + clue)
 				}
+			}
+
+			if(gameStarted && !gameData.running && !gameData.nextSync) {
+				// Game is over
+				GUI.game.countdown.text('Game End')
+				gameStarted = false;
 			}
 		}
 
 		// Append scores, sorted by score descending, with first column is a Rank
 		if(gameData.players && gameData.players.length > 0) {
+			gameStarted = true;
 			GUI.scores.div.show();
 
 			gameData.players.sort((a, b) => b.score - a.score)

@@ -53,13 +53,24 @@ td[colspan="2"] {
 	bottom: 10%;
 	left: 10%;
 	right: 10%;
-	background-image: url('imgs/chest.png');
+	background-image: url('imgs/chestClosed.png');
 	background-size: contain;
 	background-repeat: no-repeat;
 	background-position: bottom;
+	color: #000000;
+	text-shadow: 0 0 .5em #FFFFFF;
+	line-height: 1.5em;
+	font-size: 80%;
+	opacity: 75%;
+}
+#game-table .cell.byMe .mineValue {
 	color: #FFFF40;
 	text-shadow: 0 0 .5em #000000;
+	background-image: url('imgs/chestOpen.png');
+	font-weight: bold;
 	line-height: 0;
+	font-size: 100%;
+	opacity: 100%;
 }
 #game-table.playable td.opening {
 	border-style: inset;
